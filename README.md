@@ -113,3 +113,9 @@ A database is a collection of information that is organized so that it can be ea
 * Consistency — A guarantee that every node in a distributed cluster returns the same, most recent, successful write.
 * Availability — Every non-failing node returns a response for all read and write requests in a reasonable amount of time
 * Partition Tolerant — The system continues to function in spite of network partitions. 
+
+#### CAP theorem
+
+CAP theorem states that it is impossible for a distributed software system to simultaneously provide more than two out of three of the following guarantees (CAP): Consistency, Availability, and Partition tolerance. While designing a distributed system we can pick up only 2 of the 3 options.
+
+CAP theorem is one of the parameters used when choosing the database for your system.
