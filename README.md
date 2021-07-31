@@ -27,3 +27,16 @@ Vertical Scaling
 * Single point of failures
 * Data consistency
 * Has hardware limit for scaling
+
+### 2. Load Balancing
+
+Load balancer helps distribute incoming traffic across servers or databases. There are 2 types of load balancers hardware and software. Hardware load balancers are generally expensive but very effective. 
+
+You can use multiple load balancers to avoid single point of failure. They can be in active-active mode or active-passive mode.
+
+Following algorithms are largely used for load balancing purpose.
+
+* Round Robin 
+* Least Loaded
+* Session Based
+* Hashing
