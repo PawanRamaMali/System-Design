@@ -145,3 +145,20 @@ Distributed databases that rely on replication for high availability, low latenc
 Single-leader architecture
 Multi-leader architecture
 No-leader architecture
+
+#### Sharding
+
+Sharding a database is horizontal partitioning a database. 
+
+Factors to be considered while sharding
+
+* Data size
+* Performance
+* Latency
+* Cost
+
+Ways to shard the data
+
+* Divide based on some column value
+* Divide based on some algorithm or hash function
+* Consistent hashing
