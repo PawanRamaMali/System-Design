@@ -119,3 +119,29 @@ A database is a collection of information that is organized so that it can be ea
 CAP theorem states that it is impossible for a distributed software system to simultaneously provide more than two out of three of the following guarantees (CAP): Consistency, Availability, and Partition tolerance. While designing a distributed system we can pick up only 2 of the 3 options.
 
 CAP theorem is one of the parameters used when choosing the database for your system.
+
+#### ACID Properties
+
+* Atomicity
+* Consistency
+* Isolation
+* Durability
+
+We know that a transaction is a single logical unit of work consisting of one or more instructions which accesses and possibly modifies the contents of a database. To maintain integrity of the database each transaction should be ACID compliant.
+
+#### Database Replication
+
+Database replication is the process of copying data from one database to one or more databases.
+
+#### Consistency Patterns
+
+Distributed databases that rely on replication for high availability, low latency or both, we need to make a trade-off between the read consistency vs throughput. There are 2 general consistency levels supported by most distributed databases. 
+
+* Strong consistency
+* Eventual consistency
+
+#### Replication architectures
+
+Single-leader architecture
+Multi-leader architecture
+No-leader architecture
