@@ -69,3 +69,36 @@ There is a famous 80:20 rule which states that 20% of the data is accessed almos
 * Last In First Out (LIFO)
 * Least Frequently Used (LFU)
 * Random Replacement (RR)
+
+
+### 4. Consistent Hashing
+
+Consistent hashing is one of the techniques used to bake in scalability into the storage architecture of your system. 
+
+In a distributed system, consistent hashing helps in solving following scenarios:
+
+* To Provide elastic scaling (a term used to describe synamic adding/removing of servers based on usage load) for cache servers.
+* Scale out a set of storage nodes like NoSQL databases.
+
+### 5. Storage
+
+#### Object Store
+
+Object store or object-based storage is a storage architecture which manages data as objects unlike your regular hard disks which manages it as files in a file hierarchy system.
+
+#### RAID
+
+Redundant array of independent disks (RAID) is a way of storing the same data on multiple hard disks or solid state drives to protect it in case of failures. There is a RAID controller which handles all the operations and is responsible for improving performance while writing and protecting the data on multiple devices.
+
+#### RAID Levels
+
+RAID levels are nothing but different configurations. There are 6 standard levels of RAID from RAID 0 to RAID 5, then there are several combined RAID levels like RAID 10 and many non standard RAID levels which companies have developed for their own use. For the purpose of this section we will go through RAID 0 to RAID 5 and a combination RAID 10. These are good to know topics for design interview. You can ignore the other RAID levels safely.
+
+* RAID 0 – Striping
+* RAID 1 – Mirroring
+* RAID 2 – Bit-level striping with dedicated Hamming-code parity 
+* RAID 3 – Byte-level striping with a single parity disk
+* RAID 4 – Block-level striping with a single parity disk 
+* RAID 5 – Striping with distributed parity
+* RAID 6 – Striping with double parity
+* RAID 10 – Combining striping and mirroring
