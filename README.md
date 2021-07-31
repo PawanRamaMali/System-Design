@@ -102,3 +102,14 @@ RAID levels are nothing but different configurations. There are 6 standard level
 * RAID 5 – Striping with distributed parity
 * RAID 6 – Striping with double parity
 * RAID 10 – Combining striping and mirroring
+
+
+### 6. Database Concepts
+
+A database is a collection of information that is organized so that it can be easily accessed, managed and updated. In this section you will get to know about various database concepts like CAP theorem, ACID properties, Consistency patterns and Sharding.
+
+3 guarantees of a distributed system
+
+* Consistency — A guarantee that every node in a distributed cluster returns the same, most recent, successful write.
+* Availability — Every non-failing node returns a response for all read and write requests in a reasonable amount of time
+* Partition Tolerant — The system continues to function in spite of network partitions. 
