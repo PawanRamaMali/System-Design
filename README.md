@@ -59,3 +59,13 @@ There is a famous 80:20 rule which states that 20% of the data is accessed almos
 * Write-through cache: Data is written in cache and database at the same time.
 * Write-around cache: Data is written in database only. Cache is marked as invalid. It is written later in cache.
 * Write-back cache: Data is written in cache only. It is written later in db.
+
+
+#### Cache Eviction
+
+* Least Recently Used (LRU)
+* Most Recently Used (MRU)
+* First In First Out (FIFO)
+* Last In First Out (LIFO)
+* Least Frequently Used (LFU)
+* Random Replacement (RR)
