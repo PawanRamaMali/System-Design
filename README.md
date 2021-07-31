@@ -2,8 +2,28 @@
 
 
 
-Client-side vs server-side rate limiting, and their tradeoffs.
-Rate limiting algorithms: token bucket, leaking bucket, fixed window, sliding window log & counter.
-Deepdive: rate limiting rules. A look at Lyft's rate limiting component.
-Rate limiters in distributed environments, supporting multiple servers and/or concurrent threads.
-Performance optimization & monitoring. Most of this falls into productiozation, and operating a real-world system.
+## Concepts and Components 
+
+### 1. Scaling
+
+Large enterprises have large amounts of data. With increasing amounts of data the system should also grow to manage it effectively. This process of growing or shrinking of the system to handle data is called scaling.
+
+Scaling of any system can be achieved by two ways.
+
+Vertical Scaling : Vertical scaling means upgrading the hardware/software of the existing system. Adding more power to it more RAM, CPU’s and HDD. But with vertical scaling there is always a limit a max beyond which it cannot go higher.
+Horizontal Scaling : Horizontal scaling means adding multiple additional systems to improve the performance. Typically we might use several low end commodity hardware to save the cost.
+These are some differences between them.
+
+Horizontal Scaling
+
+* Might need load balancers
+* Resilient to system failures
+* Data inconsistency
+* Scales well 
+
+Vertical Scaling
+
+* Load balancer is not necessary
+* Single point of failures
+* Data consistency
+* Has hardware limit for scaling
