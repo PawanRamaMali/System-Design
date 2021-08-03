@@ -285,3 +285,50 @@ Basic concepts
 ### 13. Content delivery network (CDN)
 
 A content delivery network (CDN) refers to a geographically distributed group of servers which work together to provide fast delivery of Internet content.
+
+### 14. Back-of-the-envelope calculations
+
+Back-of-the-envelop estimations means the quick calculations you do on back of the envelop or on paper.
+
+Question:
+
+Estimate how many servers we need to serve read requests considering each server is capable of handling 7 requests per second. We have to serve a total traffic of 46 Million per day.
+
+Answer: 
+```
+7 requests per second
+7*60 = 420 requests per minute
+420*60 requests per hour = 400 * 60 = 24000 per hour = 24K per hour
+24K * 24 requests per day ≈ 30K*20 = 600K requests per day per server
+We want to handle 46 Million requests per day which means 46M/600K = approx 45M/500K = 45M/0.5M = 45*2 = 90 servers.
+```
+
+Question:
+
+Given 46 servers and 46 Million requests per day how much data does each server process per second?
+
+Answer:
+```
+So 1 server will have 1 Million requests per day.
+1 server will have 1 Million/24 requests per hour = 1000000/24 = 1000K/24 ≈ 1000K/25 = 40K requests per hour.
+1 server will have 40K/60 requests per minute = 4K/6 = 4000/6 = 3600/6 = 600 requests per minute.
+1 server will have 600/60 requests per second = 60/6 = 10 requests per second.
+```
+
+#### Cheat sheet
+
+```
+1 Bit
+1 Byte = 8 bits
+1 Kilobyte (KB) = 1024 Bytes ≈ 1000 Bytes
+1 Megabyte (MB) = 1024 KB ≈ 1000 KB
+1 Gigabyte (GB) = 1024 MB ≈ 1000 MB
+1 Terabyte (TB) = 1024 GB ≈ 1000 GB
+1 Petabyte (PB) = 1024 TB ≈ 1000 TB
+1 Exabyte (EB) = 1024 PB ≈ 1000 PB
+Kb vs KB: Serial communications and read/write devices use Kb (Kilo-bits) for data transfer ratings whereas storage devices use KB (Kilo-Byte) to rate their capacity.
+
+1 KB(kilobyte) = 1024 bytes = 1024 * 8 bits = 8196 bits
+
+1 Kb(kilobits) = 1024 bits = 1024/8 bytes = 128 bytes.
+```
