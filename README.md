@@ -150,15 +150,41 @@ No-leader architecture
 
 Sharding a database is horizontal partitioning a database. 
 
-Factors to be considered while sharding
+##### Factors to be considered while sharding
 
 * Data size
 * Performance
 * Latency
 * Cost
 
-Ways to shard the data
+##### Ways to shard the data
 
 * Divide based on some column value
 * Divide based on some algorithm or hash function
 * Consistent hashing
+
+
+### NoSQL and it’s types
+
+A NoSQL database provides a mechanism for storage and retrieval of data that is modeled in means other than the tabular relations used in relational databases.
+
+There are 4 main Nosql types
+
+1. Key-value store
+
+As the name suggests the data is saved into a key value pair. Some of the most famous in this category are Redis, Amazon’s Dynamo and Voldemort.
+
+2. Column oriented database
+
+Traditional databases are row oriented. All the columns of a row are stored together. A column-oriented stores data tables by column rather than by row. Some of the famous column oriented databases are Cassandra and HBase.
+
+3. Document-based
+
+Here we save the data into a form of documents. These documents should have some schema either fixed or unfixed and it can be expressed in json format. Some examples are MongoDB and CouchDB.
+
+4. Graph-based
+
+When the data is highly interconnected and it can be depicted as nodes and edges we can use graph based databases. The nodes can be entities and the edges can be relationships. An example of a graph based database is Neo4j.
+
+
+
