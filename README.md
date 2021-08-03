@@ -1,5 +1,33 @@
 # System Design for Web-Apps
 
+## Distributed Systems & Its 3 Principles
+
+Any system which includes multiple components residing on multiple machines coordinating through some sort of mechanism like sending messages to achieve a common goal is a distributed system.
+
+* Single responsibility principle
+
+Each component present in System Design should have a single job to perform.
+
+![image](https://user-images.githubusercontent.com/11299574/128066955-b91a4b63-7799-41a4-97a3-d8d190927d67.png)
+
+ 
+* No single point of failure principle
+
+The system should never have any component whose failure will result in the failure of the entire system.
+
+![image](https://user-images.githubusercontent.com/11299574/128066991-5b0d72cc-76d9-4282-a212-f5bed865cde5.png)
+
+ 
+* No bottleneck principle
+
+Since we design for scalability our system should not have performance bottlenecks. 
+Ideally we should horizontally scale our system to handle the large amounts of processing.
+
+![image](https://user-images.githubusercontent.com/11299574/128067041-6ba354c3-4772-42db-8089-3649d6c39083.png)
+
+
+
+
 ## Guide for System Design
 
 1. Requirement analysis
