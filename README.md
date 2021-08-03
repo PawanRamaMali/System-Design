@@ -192,4 +192,8 @@ When the data is highly interconnected and it can be depicted as nodes and edges
 * A web server is a dedicated server whose functionality is to serve web requests only.
 * It serves HTML documents, images, CSS stylesheets, and JavaScript files.
 
+### Application servers
 
+* An application server or app server is used to host applications. 
+* These applications generally are the business logic of the system.
+* An app server provides the environment both software and hardware to run them. 
