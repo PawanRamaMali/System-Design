@@ -31,6 +31,10 @@ These are some differences between them.
 * Data consistency
 * Has hardware limit for scaling
 
+
+![image](https://user-images.githubusercontent.com/11299574/128064677-17203c0a-c37e-48de-88c5-2b0865ec9228.png)
+
+
 ### 2. Load Balancing
 
 Load balancer helps distribute incoming traffic across servers or databases. 
@@ -46,6 +50,12 @@ Following algorithms are largely used for load balancing purpose.
 * Session Based
 * Hashing
 
+![image](https://user-images.githubusercontent.com/11299574/128064760-3cb9473c-93d0-45e6-9b9d-a5de447d4911.png)
+
+![image](https://user-images.githubusercontent.com/11299574/128064814-0046e8fb-950f-4930-a6c3-b056e241f0f6.png)
+
+![image](https://user-images.githubusercontent.com/11299574/128064842-84353ee3-f75f-468e-adaf-811e9b0aed5f.png)
+
 
 ### 3. Caching
 
@@ -59,6 +69,8 @@ There is a famous 80:20 rule which states that 20% of the data is accessed almos
 * Write-around cache: Data is written in database only. Cache is marked as invalid. It is written later in cache.
 * Write-back cache: Data is written in cache only. It is written later in db.
 
+![image](https://user-images.githubusercontent.com/11299574/128065045-d69782c6-3dc6-4074-b31d-1b2e3b90038b.png)
+
 
 #### Cache Eviction
 
@@ -68,6 +80,14 @@ There is a famous 80:20 rule which states that 20% of the data is accessed almos
 * Last In First Out (LIFO)
 * Least Frequently Used (LFU)
 * Random Replacement (RR)
+
+![image](https://user-images.githubusercontent.com/11299574/128065084-6ce8880b-1c49-429f-8d4c-8a05079f4e87.png)
+
+![image](https://user-images.githubusercontent.com/11299574/128065102-af84b434-d177-472f-a967-e8e651d6c6b5.png)
+
+* Distributed Caching 
+
+![image](https://user-images.githubusercontent.com/11299574/128065250-f6c3049b-7def-407a-aa50-20e61ef0974a.png)
 
 
 ### 4. Consistent Hashing
@@ -94,13 +114,37 @@ Redundant array of independent disks (RAID) is a way of storing the same data on
 RAID levels are nothing but different configurations. There are 6 standard levels of RAID from RAID 0 to RAID 5, then there are several combined RAID levels like RAID 10 and many non standard RAID levels which companies have developed for their own use. For the purpose of this section we will go through RAID 0 to RAID 5 and a combination RAID 10. These are good to know topics for design interview. You can ignore the other RAID levels safely.
 
 * RAID 0 – Striping
+
+![image](https://user-images.githubusercontent.com/11299574/128065290-f9f1b4c4-8eae-4925-9e33-c01cad07db53.png)
+
 * RAID 1 – Mirroring
+
+![image](https://user-images.githubusercontent.com/11299574/128065321-1f1a95c9-4789-442a-88ce-fac1381e95ee.png)
+
 * RAID 2 – Bit-level striping with dedicated Hamming-code parity 
+
+![image](https://user-images.githubusercontent.com/11299574/128065348-187a37ab-263f-477b-951c-00cad4ae359a.png)
+
 * RAID 3 – Byte-level striping with a single parity disk
+
+![image](https://user-images.githubusercontent.com/11299574/128065365-27317db2-4d7e-4987-8782-f71cfecb8fa1.png)
+
 * RAID 4 – Block-level striping with a single parity disk 
+
+![image](https://user-images.githubusercontent.com/11299574/128065388-d0e2b2d4-f525-4b4d-a938-4e36894cd9b7.png)
+
 * RAID 5 – Striping with distributed parity
+
+![image](https://user-images.githubusercontent.com/11299574/128065411-66e22a6c-3bf2-46b6-8deb-6d6094ae1a97.png)
+
 * RAID 6 – Striping with double parity
+
+![image](https://user-images.githubusercontent.com/11299574/128065429-bce5dd8d-2557-4736-9220-18e76311c4d2.png)
+
 * RAID 10 – Combining striping and mirroring
+
+![image](https://user-images.githubusercontent.com/11299574/128065470-3659ccbe-e97a-42ed-aa86-3436ee488ac8.png)
+
 
 
 ### 6. Database Concepts
@@ -113,11 +157,17 @@ A database is a collection of information that is organized so that it can be ea
 * Availability — Every non-failing node returns a response for all read and write requests in a reasonable amount of time
 * Partition Tolerant — The system continues to function in spite of network partitions. 
 
+![image](https://user-images.githubusercontent.com/11299574/128065514-48e2a78f-58b8-4f40-831a-447f57214b29.png)
+
+
 #### CAP theorem
 
 CAP theorem states that it is impossible for a distributed software system to simultaneously provide more than two out of three of the following guarantees (CAP): Consistency, Availability, and Partition tolerance. While designing a distributed system we can pick up only 2 of the 3 options.
 
 CAP theorem is one of the parameters used when choosing the database for your system.
+
+![image](https://user-images.githubusercontent.com/11299574/128065535-d27c9185-0978-410d-b775-fa10d7024465.png)
+
 
 #### ACID Properties
 
@@ -145,6 +195,9 @@ Single-leader architecture
 Multi-leader architecture
 No-leader architecture
 
+![image](https://user-images.githubusercontent.com/11299574/128065634-377c71cf-2c2f-4332-8798-dee269575f79.png)
+
+
 #### Sharding
 
 Sharding a database is horizontal partitioning a database. 
@@ -161,6 +214,8 @@ Sharding a database is horizontal partitioning a database.
 * Divide based on some column value
 * Divide based on some algorithm or hash function
 * Consistent hashing
+
+![image](https://user-images.githubusercontent.com/11299574/128065650-884973ff-dea4-469a-b0c2-d3fe8f776212.png)
 
 
 #### NoSQL and it’s types
