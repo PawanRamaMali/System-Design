@@ -186,18 +186,18 @@ Here we save the data into a form of documents. These documents should have some
 When the data is highly interconnected and it can be depicted as nodes and edges we can use graph based databases. The nodes can be entities and the edges can be relationships. An example of a graph based database is Neo4j.
 
 
-### Web Servers
+### 7. Web Servers
 
 * A web server is a dedicated server whose functionality is to serve web requests only.
 * It serves HTML documents, images, CSS stylesheets, and JavaScript files.
 
-### Application servers
+### 8. Application servers
 
 * An application server or app server is used to host applications. 
 * These applications generally are the business logic of the system.
 * An app server provides the environment both software and hardware to run them. 
 
-###  Architectural patterns
+### 9. Architectural patterns
 
 1. Monolithic
 
@@ -205,25 +205,38 @@ In monolithic pattern the entire business logic is composed in one single compon
 
 2. Layered
 
+![image](https://user-images.githubusercontent.com/11299574/128063314-a77970ab-f42d-4702-be88-6868e508d108.png)
+
 In the layered pattern the components are grouped into logical layers. Each request will go through the layers performing some specific tasks.
 
 3. SOA – Service oriented architecture
+
+![image](https://user-images.githubusercontent.com/11299574/128063248-9f0729e8-614f-4896-930c-cacd75a4e841.png)
 
 SOA defines a way of making components reusable via service interfaces. In this pattern each component is actually a service performing some specific functionality.
 
 4. Microservices architecture
 
+![image](https://user-images.githubusercontent.com/11299574/128063274-3bfc9b7b-a4a2-43f0-a7e8-3a1a97a337a0.png)
+
 Microservices architecture is a style which allows building an application as a collection of small independent services. Each independent service is called a microservice.
 
 Some features of microservice are
 
-Highly maintainable and testable
-Loosely coupled
-Independently deployable
-Organized around business capabilities i.e. Single responsibility principle
-Owned by a small team
+* Highly maintainable and testable
+* Loosely coupled
+* Independently deployable
+* Organized around business capabilities i.e. Single responsibility principle
+* Owned by a small team
+
 Most microservices based systems have some common components.
 
-API gateway
-Service discovery
-Service management
+* API gateway
+* Service discovery
+* Service management
+
+### 10. Message queues
+
+Message queues are typically used to provide asynchronous communication between components in a system. 
+We can divide the message queue into parts where each part serves a specific purpose. Messages belonging to some particular category can go into its respective part. 
+Some examples of the products which provide message queues are Kafka, RabbitMQ and Azure service bus.
