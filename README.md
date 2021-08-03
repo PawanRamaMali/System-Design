@@ -237,6 +237,30 @@ Most microservices based systems have some common components.
 
 ### 10. Message queues
 
+![image](https://user-images.githubusercontent.com/11299574/128063523-e8c598fd-3592-4c55-8a0e-b44320307d8a.png)
+
 Message queues are typically used to provide asynchronous communication between components in a system. 
 We can divide the message queue into parts where each part serves a specific purpose. Messages belonging to some particular category can go into its respective part. 
 Some examples of the products which provide message queues are Kafka, RabbitMQ and Azure service bus.
+
+### 11. Communication models and Protocols
+
+#### Communication models
+
+* Push
+Here sender actively sends the messages to receiver whenever a message is available.
+* Pull
+Here the receiver asks sender if a message is present. If it is present it pulls the message.
+
+#### Communication Protocols
+
+* Http
+![image](https://user-images.githubusercontent.com/11299574/128063728-9e3a888f-145a-4fe2-a568-59d5e89fb45f.png)
+
+* Long polling
+![image](https://user-images.githubusercontent.com/11299574/128063775-ea0171d7-0948-44fc-9b5b-20332454db08.png)
+
+* Websockets
+![image](https://user-images.githubusercontent.com/11299574/128063835-50f84831-9593-4154-a428-0cf5634bac53.png)
+
+
