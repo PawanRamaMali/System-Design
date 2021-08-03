@@ -282,4 +282,6 @@ Basic concepts
 * Denial of Service(DoS)
 * Distributed Denial of Service(DDoS)
 
+### 13. Content delivery network (CDN)
 
+A content delivery network (CDN) refers to a geographically distributed group of servers which work together to provide fast delivery of Internet content.
