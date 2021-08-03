@@ -255,12 +255,31 @@ Here the receiver asks sender if a message is present. If it is present it pulls
 #### Communication Protocols
 
 * Http
+
 ![image](https://user-images.githubusercontent.com/11299574/128063728-9e3a888f-145a-4fe2-a568-59d5e89fb45f.png)
 
 * Long polling
+
 ![image](https://user-images.githubusercontent.com/11299574/128063775-ea0171d7-0948-44fc-9b5b-20332454db08.png)
 
 * Websockets
+
 ![image](https://user-images.githubusercontent.com/11299574/128063835-50f84831-9593-4154-a428-0cf5634bac53.png)
+
+### 12. Security
+
+Basic concepts
+
+* Authentication
+* Authorization
+* Encryption
+* Integrity
+* Symmetric encryption
+* Asymmetric encryption
+* Certificate
+* Certification Authority(CA)
+* Cross-Site Scripting(XSS)
+* Denial of Service(DoS)
+* Distributed Denial of Service(DDoS)
 
 
