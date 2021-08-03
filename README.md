@@ -1,5 +1,4 @@
-# Pragmatic-Systems-Design-for-Web-Apps
-
+# System Design for Web-Apps
 
 
 ## Concepts and Components 
@@ -197,3 +196,34 @@ When the data is highly interconnected and it can be depicted as nodes and edges
 * An application server or app server is used to host applications. 
 * These applications generally are the business logic of the system.
 * An app server provides the environment both software and hardware to run them. 
+
+###  Architectural patterns
+
+1. Monolithic
+
+In monolithic pattern the entire business logic is composed in one single component.
+
+2. Layered
+
+In the layered pattern the components are grouped into logical layers. Each request will go through the layers performing some specific tasks.
+
+3. SOA – Service oriented architecture
+
+SOA defines a way of making components reusable via service interfaces. In this pattern each component is actually a service performing some specific functionality.
+
+4. Microservices architecture
+
+Microservices architecture is a style which allows building an application as a collection of small independent services. Each independent service is called a microservice.
+
+Some features of microservice are
+
+Highly maintainable and testable
+Loosely coupled
+Independently deployable
+Organized around business capabilities i.e. Single responsibility principle
+Owned by a small team
+Most microservices based systems have some common components.
+
+API gateway
+Service discovery
+Service management
