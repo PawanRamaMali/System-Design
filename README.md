@@ -164,7 +164,7 @@ Sharding a database is horizontal partitioning a database.
 * Consistent hashing
 
 
-### NoSQL and it’s types
+#### NoSQL and it’s types
 
 A NoSQL database provides a mechanism for storage and retrieval of data that is modeled in means other than the tabular relations used in relational databases.
 
@@ -186,5 +186,10 @@ Here we save the data into a form of documents. These documents should have some
 
 When the data is highly interconnected and it can be depicted as nodes and edges we can use graph based databases. The nodes can be entities and the edges can be relationships. An example of a graph based database is Neo4j.
 
+
+### Web Servers
+
+* A web server is a dedicated server whose functionality is to serve web requests only.
+* It serves HTML documents, images, CSS stylesheets, and JavaScript files.
 
 
