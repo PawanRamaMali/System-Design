@@ -493,3 +493,28 @@ Kb vs KB: Serial communications and read/write devices use Kb (Kilo-bits) for da
 
 6) **Availability & Reliability**
 *  Are you thinking about how things can fail, especially in a distributed environment? Do know how to design a system to cope with network failures? Do you understand durability?
+
+## SOLID Introduction
+
+SOLID is a set of five design principles intended to make software designs more understandable, flexible, and maintainable. This was theorized by Robert C. Martin famously known as Uncle Bob in his paper published in the year 2000. 
+
+### 1. Single responsibility principle (SRP)
+
+Every software component should have one responsibility. Every software component should have one reason to change.
+
+#### Cohesion – Cohesion refers to the degree to which the elements inside a module belong together.
+
+#### Coupling – Coupling is the degree of interdependence between software modules. 
+
+Perspective 
+1. Method level
+2. Class level
+3. Package level
+4. System design level
+
+Benefits
+1. Easy to change behaviour.
+2. Very helpful in debugging. 
+3. Easy to understand the code. 
+4. Easy to write tests.
+5. Less maintenance.
