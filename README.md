@@ -554,3 +554,71 @@ class UserRegistrationService {
 	}
 }
 ```
+
+### 2. Open closed principle (OCP)
+
+Software entities (classes, modules, functions, etc.) should be open for extension, but closed for modification. OCP encourages the use of polymorphism. Also a way to implement OCP is using strategy design pattern.
+
+Below is an example for a bad design
+
+```
+interface Operation{}
+
+class Addition implements Operation {
+	int a;
+	int b;
+	int result;
+	// Constructor, getters and setters
+}
+
+class Subtraction implements Operation {
+	int a;
+	int b;
+	int result;
+	// Constructor, getters and setters
+}
+
+class Calculator {
+	public void calculate(Operation operation) {
+		// Null checks
+		if(operation instanceof Addition) {
+			Addition addition = (Addition) operation;
+			addition.setResult(addition.getA() + addition.getB());
+		} else if(operation instanceof Subtraction) {
+			Subtraction subtraction = (Subtraction) subtraction;
+			subtraction.setResult(subtraction.getA() - subtraction.getB());
+		}
+	}
+}
+```
+
+### Polymorphism
+
+1. Method overloading
+
+```
+void add(int a, int b)
+void add(int a, int b, int c)
+```
+
+2. Method overriding
+
+```
+interface Operation {
+	void perform();
+}
+
+class Addition implements Operation {
+	@Override
+	void perform() {
+		// Some code
+	}
+}
+
+class Subtraction implements Operation {
+	@Override
+	void perform() {
+		// Some code
+	}
+}
+```
