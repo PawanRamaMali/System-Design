@@ -518,3 +518,39 @@ Benefits
 3. Easy to understand the code. 
 4. Easy to write tests.
 5. Less maintenance.
+
+#### Below code does not follow SRP
+```
+class UserRegistrationService {
+	
+	public void registerUser(String username, String emailId) {
+		// Create a sql connection
+		// Insert the username into database
+		// Close the connection
+		// Send a welcome email to the user
+	} 
+}
+```
+
+#### Below code follows SRP
+```
+class DatabaseService {
+	public void createConnection(){}
+	public void insert(){}
+	public void closeConnection(){}
+}
+
+
+class EmailService {
+	public void sendEmail(){}
+}
+
+
+class UserRegistrationService {
+	public void registerUser(String username, String emailId) {
+		databaseService.insert(username, emailId);
+		emailService.sendEmail(emailId);
+
+	}
+}
+```
