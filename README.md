@@ -622,3 +622,56 @@ class Subtraction implements Operation {
 	}
 }
 ```
+
+Below is an example of design following OCP
+
+```
+interface Operation {
+	void perform();
+}
+
+class Addition implements Operation {
+	int a;
+	int b;
+	int result;
+	// Constructor, getters and setters
+
+	public void perform() {
+		result = a + b;
+	}
+}
+
+class Subtraction implements Operation {
+	int a;
+	int b;
+	int result;
+	// Constructor, getters and setters
+
+	public void perform() {
+		result = a - b;
+	}
+}
+
+class Multiplication implements Operation {
+	int a;
+	int b;
+	int result;
+	// Constructor, getters and setters
+
+	public void perform() {
+		result = a * b;
+	}
+}
+
+class Calculator {
+	public void calculate(Operation operation) {
+		// Null checks
+		operation.perform();
+	}
+} 
+
+```
+
+#### Benefits
+
+Suppose clients are using existing class and if we modify that class there is a chance of introduction of bugs in the existing features. So it is better to create a new class so that existing features are untouched.
