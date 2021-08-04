@@ -1,5 +1,53 @@
 # System Design for Web-Apps
 
+
+## Working Components of Front-end Architecture
+
+* Code
+  * HTML5/WAI-ARIA
+  * CSS/Sass Code standards and organization
+  * Object-Oriented approach (how do objects break down and get put together)
+  * JS frameworks/organization/performance optimization techniques
+  * Asset Delivery - Front-end Ops
+* Documentation
+  * Onboarding Docs
+  * Styleguide/Pattern Library
+  * Architecture Diagrams (code flow, tool chain)
+* Testing
+  * Performance Testing
+  * Visual Regression
+  * Unit Testing
+  * End-to-End Testing
+* Process
+  * Git Workflow
+  * Dependency Management (npm, Bundler, Bower)
+  * Build Systems (Grunt/Gulp)
+  * Deploy Process
+  * Continuous Integration (Travis CI, Jenkins)
+
+## Web App System design considerations:
+
+* Security (CORS)
+* Using CDN
+	* A content delivery network (CDN) is a system of distributed servers (network) that deliver webpages and other Web content to a user based on the geographic locations of the user, the origin of the webpage and a content delivery server.
+	* This service is effective in speeding the delivery of content of websites with high traffic and websites that have global reach. The closer the CDN server is to the user geographically, the faster the content will be delivered to the user. 
+	* CDNs also provide protection from large surges in traffic.
+* Full Text Search
+	* Using Sphinx/Lucene/Solr - which achieve fast search responses because, instead of searching the text directly, it searches an index instead.
+* Offline support/Progressive enhancement
+	* Service Workers
+* Web Workers
+* Server Side rendering
+* Asynchronous loading of assets (Lazy load items)
+* Minimizing network requests (Http2 + bundling/sprites etc)
+* Developer productivity/Tooling
+* Accessibility
+* Internationalization
+* Responsive design
+* Browser compatibility
+
+
+
 ## Distributed Systems & Its 3 Principles
 
 Any system which includes multiple components residing on multiple machines coordinating through some sort of mechanism like sending messages to achieve a common goal is a distributed system.
