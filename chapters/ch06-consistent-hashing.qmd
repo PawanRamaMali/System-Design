@@ -1,0 +1,417 @@
+# Consistent Hashing
+
+## What is Consistent Hashing?
+
+**Consistent hashing** is a distributed hashing technique that minimizes the number of keys that need to be remapped when the hash table is resized. It's essential for building scalable distributed systems.
+
+## The Problem with Traditional Hashing
+
+### Simple Hash-Based Distribution
+
+**Traditional approach:**
+
+```
+server_index = hash(key) % number_of_servers
+```
+
+**Example with 3 servers:**
+
+```
+hash("user123") % 3 = Server 1
+hash("user456") % 3 = Server 2
+hash("user789") % 3 = Server 0
+```
+
+### The Problem
+
+**When you add or remove a server:**
+
+```
+# Before: 3 servers
+hash("user123") % 3 = Server 1
+
+# After adding server (4 servers):
+hash("user123") % 4 = Server 2  ← Different server!
+```
+
+**Consequences:**
+
+* Most keys get remapped to different servers
+* Massive cache invalidation
+* Database overload (cache stampede)
+* Poor performance during scaling
+
+**Impact:**
+
+```
+# Adding 1 server to a 3-server cluster
+Keys remapped: ~75% (3/4 of all keys)
+```
+
+## How Consistent Hashing Works
+
+### The Hash Ring Concept
+
+1. **Create a hash ring** (0 to 2^32 - 1)
+2. **Place servers** on the ring using hash(server_name)
+3. **Place keys** on the ring using hash(key)
+4. **Route each key** to the next server clockwise on the ring
+
+### Visual Representation
+
+```
+         0°/360°
+            |
+      Server A
+           /|\
+          / | \
+    Key1 /  |  \ Key3
+        /   |   \
+       /  Key2   \
+      /           \
+Server C --------- Server B
+   270°            90°
+```
+
+### Key Assignment
+
+**Rule:** Each key is assigned to the first server encountered when moving clockwise from the key's position.
+
+```
+Key1 (45°)  → Server B (90°)
+Key2 (135°) → Server C (270°)
+Key3 (300°) → Server A (360°/0°)
+```
+
+## Benefits of Consistent Hashing
+
+### 1. Minimal Remapping
+
+**When adding a server:**
+
+Only keys between the new server and the previous server (clockwise) are remapped.
+
+```
+# Adding 1 server to a 3-server cluster
+Keys remapped: ~25% (1/4 of keys)
+vs Traditional hashing: ~75%
+```
+
+### 2. Balanced Load
+
+With virtual nodes (explained below), load is distributed evenly across servers.
+
+### 3. Scalability
+
+Easy to add or remove servers with minimal disruption.
+
+### 4. Fault Tolerance
+
+When a server fails, only its keys are redistributed to the next server.
+
+## Virtual Nodes (VNodes)
+
+### The Problem with Basic Consistent Hashing
+
+**Uneven distribution:**
+
+* Hash function may place servers unevenly on ring
+* Some servers get more keys than others
+* Load imbalance
+
+### Solution: Virtual Nodes
+
+**Each physical server is represented by multiple virtual nodes on the ring.**
+
+```
+Physical Server A → Virtual nodes: A1, A2, A3, ..., A100
+Physical Server B → Virtual nodes: B1, B2, B3, ..., B100
+Physical Server C → Virtual nodes: C1, C2, C3, ..., C100
+```
+
+**Benefits:**
+
+* More uniform distribution
+* Better load balancing
+* Smoother scaling (keys distributed across more points)
+
+**Typical configuration:**
+
+* 100-200 virtual nodes per physical server
+
+## Use Cases in Distributed Systems
+
+### 1. Distributed Caching
+
+**Scenario:** Cache data across multiple Redis/Memcached servers
+
+**Problem:** How to determine which cache server stores a particular key?
+
+**Solution:**
+
+```python
+def get_cache_server(key):
+    hash_value = hash(key)
+    return consistent_hash_ring.get_node(hash_value)
+
+# Usage
+cache_server = get_cache_server("user:123")
+data = cache_server.get("user:123")
+```
+
+**Benefits:**
+
+* Adding cache server: Minimal cache invalidation
+* Removing cache server: Only affected keys redistributed
+* Elastic scaling support
+
+### 2. Database Sharding
+
+**Scenario:** Partition database across multiple shards
+
+**Example:**
+
+```python
+def get_database_shard(user_id):
+    hash_value = hash(user_id)
+    return consistent_hash_ring.get_node(hash_value)
+
+# Usage
+shard = get_database_shard(user_id=12345)
+user_data = shard.query("SELECT * FROM users WHERE id = ?", 12345)
+```
+
+**Benefits:**
+
+* Predictable data location
+* Easy to add shards
+* Minimal data migration
+
+### 3. Load Balancing
+
+**Scenario:** Distribute requests across application servers
+
+**Benefits:**
+
+* Session affinity (same user → same server)
+* Minimal disruption when scaling
+
+### 4. Content Delivery Networks (CDN)
+
+**Scenario:** Route requests to geographically distributed edge servers
+
+**Application:**
+
+* Determine which edge server caches which content
+* Consistent routing even as edge servers are added/removed
+
+## Implementation Considerations
+
+### Choosing Hash Function
+
+**Requirements:**
+
+* Uniform distribution
+* Fast computation
+* Low collision rate
+
+**Popular choices:**
+
+* **MD5:** 128-bit, good distribution
+* **MurmurHash:** Fast, good distribution
+* **xxHash:** Very fast, excellent distribution
+
+### Number of Virtual Nodes
+
+**Trade-offs:**
+
+| Virtual Nodes | Distribution | Memory | Lookup Time |
+|---------------|--------------|---------|-------------|
+| Low (10-50)   | Poor         | Low     | Fast        |
+| Medium (100-200) | Good      | Medium  | Medium      |
+| High (500+)   | Excellent    | High    | Slow        |
+
+**Recommendation:** 100-200 virtual nodes per server
+
+### Data Structures
+
+**Efficient implementation:**
+
+* **Sorted map/tree** for ring (Red-Black tree, TreeMap)
+* **Binary search** for finding next server
+* **O(log N)** lookup complexity
+
+```python
+import bisect
+
+class ConsistentHashRing:
+    def __init__(self, nodes=None, virtual_nodes=150):
+        self.virtual_nodes = virtual_nodes
+        self.ring = {}
+        self.sorted_keys = []
+        if nodes:
+            for node in nodes:
+                self.add_node(node)
+
+    def add_node(self, node):
+        for i in range(self.virtual_nodes):
+            virtual_key = f"{node}:{i}"
+            hash_value = self._hash(virtual_key)
+            self.ring[hash_value] = node
+            bisect.insort(self.sorted_keys, hash_value)
+
+    def remove_node(self, node):
+        for i in range(self.virtual_nodes):
+            virtual_key = f"{node}:{i}"
+            hash_value = self._hash(virtual_key)
+            del self.ring[hash_value]
+            self.sorted_keys.remove(hash_value)
+
+    def get_node(self, key):
+        if not self.ring:
+            return None
+        hash_value = self._hash(key)
+        # Find first node clockwise
+        idx = bisect.bisect_right(self.sorted_keys, hash_value)
+        if idx == len(self.sorted_keys):
+            idx = 0
+        return self.ring[self.sorted_keys[idx]]
+
+    def _hash(self, key):
+        return hash(key) % (2**32)
+```
+
+## Real-World Examples
+
+### Amazon DynamoDB
+
+* Uses consistent hashing for data partitioning
+* Virtual nodes for load balancing
+* Automatic scaling with minimal data movement
+
+### Apache Cassandra
+
+* Consistent hashing for data distribution across nodes
+* Virtual nodes (vnodes) configurable per node
+* Peer-to-peer architecture
+
+### Memcached Clients
+
+* Client-side consistent hashing
+* Determines which Memcached server to use
+* Libraries: ketama, libmemcached
+
+### Riak
+
+* Consistent hashing for data placement
+* Virtual nodes for uniform distribution
+* Fault tolerance and replication
+
+## Advanced Topics
+
+### Replication
+
+**Scenario:** Store multiple copies for fault tolerance
+
+**Approach:**
+
+* Store data on N consecutive servers on the ring
+* Replication factor = N
+
+```python
+def get_replica_nodes(key, replication_factor=3):
+    nodes = []
+    hash_value = self._hash(key)
+    idx = bisect.bisect_right(self.sorted_keys, hash_value)
+
+    # Get next N unique physical nodes
+    while len(nodes) < replication_factor:
+        if idx >= len(self.sorted_keys):
+            idx = 0
+        node = self.ring[self.sorted_keys[idx]]
+        if node not in nodes:
+            nodes.append(node)
+        idx += 1
+
+    return nodes
+```
+
+### Weighted Nodes
+
+**Scenario:** Some servers have more capacity
+
+**Approach:**
+
+* Assign more virtual nodes to powerful servers
+* Higher capacity → More virtual nodes
+
+```python
+# High-capacity server: 200 virtual nodes
+# Low-capacity server: 50 virtual nodes
+```
+
+## Best Practices
+
+### 1. Choose Appropriate Number of Virtual Nodes
+
+* Start with 150-200
+* Increase for better distribution
+* Monitor and adjust based on load distribution
+
+### 2. Use Efficient Hash Functions
+
+* Avoid cryptographic hashes (overkill, slow)
+* Use fast non-cryptographic hashes (MurmurHash, xxHash)
+
+### 3. Monitor Distribution
+
+* Track key distribution across servers
+* Alert on significant imbalances
+* Adjust virtual node count if needed
+
+### 4. Handle Node Failures
+
+* Implement health checks
+* Automatically remove failed nodes
+* Keys automatically route to next healthy node
+
+### 5. Gradual Rollout
+
+* Add new nodes gradually
+* Monitor impact on system
+* Allows for capacity adjustment
+
+## Limitations
+
+### 1. Not Perfectly Uniform
+
+* Small number of servers: Distribution may be uneven
+* Solution: Increase virtual nodes
+
+### 2. Rebalancing on Resize
+
+* Adding/removing nodes still requires some rebalancing
+* Better than traditional hashing, but not zero
+
+### 3. Hotspot Keys
+
+* Popular keys still create hotspots
+* Consistent hashing distributes keys, not load
+* Solution: Application-level sharding, caching
+
+## Summary
+
+Consistent hashing is a fundamental technique for:
+
+* **Elastic scaling** of distributed systems
+* **Minimizing disruption** when adding/removing nodes
+* **Load distribution** across cache servers and databases
+
+Key concepts:
+
+* Hash ring with virtual nodes
+* Clockwise key assignment
+* Minimal remapping on resize (K/N keys vs most keys)
+* Wide applicability (caching, sharding, load balancing)
+
+Most modern distributed systems leverage consistent hashing either directly or in modified forms to achieve scalability and reliability.

@@ -1,0 +1,510 @@
+# Web Servers, Application Servers & Architectural Patterns
+
+## Web Servers
+
+### What is a Web Server?
+
+A **web server** is a dedicated server whose primary function is to serve web requests, typically using HTTP/HTTPS protocol.
+
+### Responsibilities
+
+* **Serve static content:** HTML documents, images, CSS stylesheets, JavaScript files
+* **Handle HTTP requests:** Process GET, POST, PUT, DELETE requests
+* **SSL/TLS termination:** Handle HTTPS connections
+* **Load balancing:** Distribute requests (when configured)
+* **Compression:** Gzip, Brotli compression
+* **Caching:** Cache static resources
+
+### Popular Web Servers
+
+* **NGINX:** High-performance, event-driven, reverse proxy
+* **Apache HTTP Server:** Feature-rich, module-based
+* **Microsoft IIS:** Windows-based web server
+* **Caddy:** Automatic HTTPS, modern features
+
+### Example: NGINX Configuration
+
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+
+    # Serve static files
+    location /static/ {
+        root /var/www/html;
+        expires 30d;
+    }
+
+    # Proxy to application server
+    location /api/ {
+        proxy_pass http://app_server:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## Application Servers
+
+### What is an Application Server?
+
+An **application server** hosts and executes business logic and application code. It provides the runtime environment for applications to run.
+
+### Responsibilities
+
+* **Execute business logic:** Process complex operations
+* **Manage application state:** Session management, caching
+* **Database connections:** Connection pooling, ORM
+* **Transaction management:** ACID transactions
+* **Security:** Authentication, authorization
+* **API endpoints:** RESTful APIs, GraphQL
+
+### Environment Provided
+
+**Software:**
+
+* Runtime (Node.js, Java JVM, Python interpreter, .NET runtime)
+* Frameworks (Express, Spring Boot, Django, ASP.NET)
+* Libraries and dependencies
+
+**Hardware:**
+
+* CPU, memory allocation
+* Network configuration
+* File system access
+
+### Popular Application Servers/Frameworks
+
+* **Node.js:** JavaScript runtime, event-driven
+* **Spring Boot (Java):** Enterprise Java applications
+* **Django/Flask (Python):** Web frameworks
+* **Express.js:** Minimal Node.js framework
+* **ASP.NET Core:** Microsoft's web framework
+* **Ruby on Rails:** Ruby web framework
+
+### Example: Express.js Application Server
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Middleware
+app.use(express.json());
+
+// Business logic endpoint
+app.post('/api/orders', async (req, res) => {
+    try {
+        // Process order
+        const order = await processOrder(req.body);
+
+        // Save to database
+        await db.orders.insert(order);
+
+        // Send notification
+        await sendOrderConfirmation(order);
+
+        res.status(201).json(order);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(8080);
+```
+
+## Web Server vs Application Server
+
+| Aspect | Web Server | Application Server |
+|--------|-----------|-------------------|
+| **Primary Role** | Serve static content | Execute business logic |
+| **Content** | HTML, CSS, JS, images | Dynamic content generation |
+| **Protocol** | HTTP/HTTPS | Multiple (HTTP, RPC, etc.) |
+| **State** | Stateless | Can be stateful |
+| **Examples** | NGINX, Apache | Node.js, Spring Boot |
+| **Performance** | Very fast (static) | Depends on logic complexity |
+
+### Modern Architecture
+
+In practice, they often work together:
+
+```
+Client → Web Server (NGINX) → Application Server (Node.js) → Database
+         ↓
+      Static files served directly
+```
+
+## Architectural Patterns
+
+Architectural patterns define how components are organized and interact within a system.
+
+### 1. Monolithic Architecture
+
+**Definition:** Entire application is built as a single, unified component.
+
+**Structure:**
+
+```
+┌────────────────────────────┐
+│   Monolithic Application   │
+│                            │
+│  ┌──────────────────────┐  │
+│  │  Presentation Layer  │  │
+│  └──────────────────────┘  │
+│  ┌──────────────────────┐  │
+│  │   Business Logic     │  │
+│  └──────────────────────┘  │
+│  ┌──────────────────────┐  │
+│  │   Data Access Layer  │  │
+│  └──────────────────────┘  │
+└────────────────────────────┘
+         ↓
+    Single Database
+```
+
+**Characteristics:**
+
+* Single codebase
+* Single deployment unit
+* Shared database
+* Tightly coupled components
+
+**Pros:**
+
+* ✅ Simple to develop initially
+* ✅ Easy to test (everything in one place)
+* ✅ Simple deployment
+* ✅ No network latency between components
+* ✅ Strong consistency
+
+**Cons:**
+
+* ❌ Hard to scale (must scale entire app)
+* ❌ Tight coupling (changes affect everything)
+* ❌ Long deployment cycles
+* ❌ Technology lock-in (one stack for everything)
+* ❌ Large codebase becomes unmanageable
+
+**When to use:**
+
+* Small applications
+* Early-stage startups
+* Simple requirements
+* Small team
+
+**Example:**
+
+Traditional e-commerce application with all features (auth, catalog, cart, checkout, inventory) in one application.
+
+---
+
+### 2. Layered Architecture
+
+![Layered Architecture](https://user-images.githubusercontent.com/11299574/128063314-a77970ab-f42d-4702-be88-6868e508d108.png)
+
+**Definition:** Components organized into logical horizontal layers, each with specific responsibilities.
+
+**Typical Layers:**
+
+```
+┌────────────────────────────┐
+│  Presentation Layer        │  ← UI, API endpoints
+├────────────────────────────┤
+│  Business Logic Layer      │  ← Core logic, services
+├────────────────────────────┤
+│  Data Access Layer         │  ← Database interaction
+├────────────────────────────┤
+│  Database Layer            │  ← Persistent storage
+└────────────────────────────┘
+```
+
+**Rules:**
+
+* Each layer only communicates with adjacent layers
+* Request flows top to bottom
+* Each layer has specific responsibility
+
+**Pros:**
+
+* ✅ Clear separation of concerns
+* ✅ Easy to understand structure
+* ✅ Layers can be developed independently
+* ✅ Testable (mock adjacent layers)
+* ✅ Maintainable
+
+**Cons:**
+
+* ❌ Can become monolithic
+* ❌ Performance overhead (through layers)
+* ❌ Changes may ripple through layers
+
+**Example:**
+
+```javascript
+// Presentation Layer (Controller)
+app.get('/users/:id', async (req, res) => {
+    const user = await userService.getUser(req.params.id);
+    res.json(user);
+});
+
+// Business Logic Layer (Service)
+class UserService {
+    async getUser(id) {
+        const user = await userRepository.findById(id);
+        // Business logic
+        return user;
+    }
+}
+
+// Data Access Layer (Repository)
+class UserRepository {
+    async findById(id) {
+        return await db.query('SELECT * FROM users WHERE id = ?', [id]);
+    }
+}
+```
+
+---
+
+### 3. Service-Oriented Architecture (SOA)
+
+![SOA Architecture](https://user-images.githubusercontent.com/11299574/128063248-9f0729e8-614f-4896-930c-cacd75a4e841.png)
+
+**Definition:** Application structured as collection of services that communicate via well-defined interfaces.
+
+**Key Concepts:**
+
+* **Services:** Independent, reusable components
+* **Service Contract:** Interface definition (WSDL, API spec)
+* **Service Registry:** Directory of available services
+* **Enterprise Service Bus (ESB):** Communication middleware
+
+**Characteristics:**
+
+* Coarse-grained services
+* Services communicate via protocols (SOAP, HTTP)
+* Shared database possible
+* Enterprise-focused
+
+**Pros:**
+
+* ✅ Service reusability
+* ✅ Location transparency
+* ✅ Interoperability (cross-platform)
+* ✅ Scalability
+
+**Cons:**
+
+* ❌ Complex infrastructure (ESB)
+* ❌ Heavyweight protocols (SOAP/XML)
+* ❌ Governance overhead
+* ❌ Can be slow
+
+**Example Services:**
+
+* User Service
+* Payment Service
+* Notification Service
+* Order Service
+
+**Communication:**
+
+```xml
+<!-- SOAP Request -->
+<soap:Envelope>
+    <soap:Body>
+        <getUserInfo>
+            <userId>123</userId>
+        </getUserInfo>
+    </soap:Body>
+</soap:Envelope>
+```
+
+---
+
+### 4. Microservices Architecture
+
+![Microservices Architecture](https://user-images.githubusercontent.com/11299574/128063274-3bfc9b7b-a4a2-43f0-a7e8-3a1a97a337a0.png)
+
+**Definition:** Application built as collection of small, independent services, each running in its own process.
+
+**Key Principles:**
+
+* **Single Responsibility:** Each service does one thing well
+* **Independently Deployable:** Deploy without affecting others
+* **Decentralized:** No central coordination
+* **Smart endpoints, dumb pipes:** Services own their logic
+* **Database per service:** Each service has its own database
+
+**Characteristics:**
+
+* Fine-grained services
+* Lightweight communication (REST, gRPC, messaging)
+* Separate databases
+* Organized around business capabilities
+* Owned by small teams
+
+**Pros:**
+
+* ✅ Independent deployment
+* ✅ Technology diversity (polyglot)
+* ✅ Fault isolation (one service fails ≠ all fail)
+* ✅ Scalability (scale services independently)
+* ✅ Team autonomy
+* ✅ Easier to understand (small services)
+
+**Cons:**
+
+* ❌ Complex infrastructure
+* ❌ Distributed system challenges
+* ❌ Network latency
+* ❌ Data consistency issues
+* ❌ Testing complexity
+* ❌ Operational overhead
+
+**Common Components:**
+
+#### API Gateway
+
+**Role:** Single entry point for clients
+
+**Responsibilities:**
+
+* Request routing
+* Authentication/authorization
+* Rate limiting
+* Request/response transformation
+* Aggregation of responses
+
+**Example:**
+
+```
+Client → API Gateway → [User Service, Order Service, Product Service]
+```
+
+#### Service Discovery
+
+**Role:** Services register and discover each other
+
+**Tools:**
+
+* Consul
+* Eureka
+* etcd
+* Kubernetes DNS
+
+**Example:**
+
+```javascript
+// Service registers itself
+serviceRegistry.register({
+    name: 'user-service',
+    host: 'localhost',
+    port: 8001
+});
+
+// Another service discovers it
+const userService = await serviceRegistry.discover('user-service');
+```
+
+#### Service Management
+
+**Responsibilities:**
+
+* Health monitoring
+* Logging and tracing
+* Configuration management
+* Service mesh (Istio, Linkerd)
+
+**When to use Microservices:**
+
+* Large, complex applications
+* Multiple teams
+* Need for independent scaling
+* Technology diversity requirements
+* Frequent deployments
+
+**When NOT to use:**
+
+* Small applications
+* Small team
+* Unclear domain boundaries
+* Tight coupling required
+
+---
+
+## Comparison of Architectural Patterns
+
+| Pattern | Complexity | Scalability | Deployment | Team Size | Best For |
+|---------|-----------|-------------|------------|-----------|----------|
+| **Monolithic** | Low | Limited | Simple | Small | Simple apps, MVPs |
+| **Layered** | Low-Med | Limited | Simple | Small-Med | Structured monoliths |
+| **SOA** | High | Good | Complex | Large | Enterprise integration |
+| **Microservices** | Very High | Excellent | Complex | Large | Large-scale, distributed |
+
+## Evolution Path
+
+Many successful companies follow this evolution:
+
+```
+Monolithic → Modular Monolithic → SOA → Microservices
+    ↓              ↓                ↓          ↓
+  Simple    Better structure   Services   Full distribution
+```
+
+**Don't start with microservices unless you have:**
+
+* Clear domain boundaries
+* Experienced team
+* Need for independent scaling
+* Resources for operational complexity
+
+## Best Practices
+
+### For All Architectures
+
+1. **Start simple:** Don't over-engineer
+2. **Clear boundaries:** Define component responsibilities
+3. **Loose coupling:** Minimize dependencies
+4. **High cohesion:** Related functionality together
+5. **Documentation:** Architecture diagrams, API docs
+
+### For Microservices Specifically
+
+1. **Domain-Driven Design:** Identify bounded contexts
+2. **API Versioning:** Support backward compatibility
+3. **Circuit Breakers:** Handle service failures gracefully
+4. **Distributed Tracing:** Jaeger, Zipkin for debugging
+5. **Centralized Logging:** ELK stack, Splunk
+6. **Container Orchestration:** Kubernetes, Docker Swarm
+7. **CI/CD Pipeline:** Automated testing and deployment
+
+## Summary
+
+**Web Servers:**
+
+* Serve static content
+* Handle HTTP requests
+* Often used as reverse proxy
+
+**Application Servers:**
+
+* Execute business logic
+* Provide runtime environment
+* Handle dynamic content
+
+**Architectural Patterns:**
+
+* **Monolithic:** Simple, but limited scalability
+* **Layered:** Organized, maintainable structure
+* **SOA:** Service reusability, enterprise-focused
+* **Microservices:** Highly scalable, complex
+
+Choose based on:
+
+* Application complexity
+* Team size and expertise
+* Scalability requirements
+* Deployment frequency
+* Operational capabilities
+
+Start simple, evolve as needed. Premature optimization leads to unnecessary complexity.

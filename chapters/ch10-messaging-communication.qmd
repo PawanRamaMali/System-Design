@@ -1,0 +1,708 @@
+# Message Queues & Communication Protocols
+
+## Message Queues
+
+### What is a Message Queue?
+
+A **message queue** is a form of asynchronous service-to-service communication used in distributed systems. Messages are stored in a queue until they are processed and deleted.
+
+![Message Queue Architecture](https://user-images.githubusercontent.com/11299574/128063523-e8c598fd-3592-4c55-8a0e-b44320307d8a.png)
+
+### Key Concepts
+
+**Components:**
+
+* **Producer:** Sends messages to the queue
+* **Queue:** Stores messages temporarily
+* **Consumer:** Receives and processes messages
+* **Message:** Data being transmitted
+
+**Basic Flow:**
+
+```
+Producer → Message Queue → Consumer
+```
+
+### Why Use Message Queues?
+
+**Benefits:**
+
+* ✅ **Asynchronous Processing:** Producer doesn't wait for consumer
+* ✅ **Decoupling:** Producer and consumer independent
+* ✅ **Load Leveling:** Queue absorbs traffic spikes
+* ✅ **Reliability:** Messages not lost if consumer unavailable
+* ✅ **Scalability:** Add more consumers to process faster
+* ✅ **Fault Tolerance:** Retry failed messages
+
+**Example Use Case:**
+
+```
+E-commerce Order Flow:
+Order Service → Queue → [Inventory Service, Email Service, Analytics Service]
+
+Without Queue:
+- Order Service waits for all services
+- If Email Service down, order fails
+
+With Queue:
+- Order Service sends to queue and returns
+- Services process asynchronously
+- If Email Service down, message retried later
+```
+
+### Message Queue Patterns
+
+#### 1. Point-to-Point (Queue)
+
+**Characteristics:**
+
+* One message → One consumer
+* Message deleted after processing
+* Load balanced across consumers
+
+```
+Producer → Queue → [Consumer 1 OR Consumer 2 OR Consumer 3]
+```
+
+**Use cases:**
+
+* Task distribution
+* Job processing
+* Command execution
+
+#### 2. Publish-Subscribe (Topic)
+
+**Characteristics:**
+
+* One message → Multiple consumers
+* Each subscriber gets copy
+* Broadcast pattern
+
+```
+Publisher → Topic → [Subscriber 1 AND Subscriber 2 AND Subscriber 3]
+```
+
+**Use cases:**
+
+* Event notifications
+* Real-time updates
+* Fan-out scenarios
+
+**Example:**
+
+```
+User Registration Event:
+User Service publishes "UserRegistered" →
+    Email Service (sends welcome email)
+    Analytics Service (tracks signup)
+    CRM Service (creates lead)
+```
+
+#### 3. Request-Reply
+
+**Characteristics:**
+
+* Producer expects response
+* Correlation ID to match requests/responses
+
+```
+Service A → Request Queue → Service B
+Service A ← Reply Queue ← Service B
+```
+
+### Message Properties
+
+**Message Components:**
+
+* **Headers:** Metadata (timestamp, ID, priority)
+* **Body:** Actual data (JSON, XML, binary)
+* **Properties:** Custom attributes
+
+**Example Message:**
+
+```json
+{
+  "messageId": "msg-123",
+  "timestamp": "2024-01-01T10:00:00Z",
+  "priority": 5,
+  "body": {
+    "orderId": "order-456",
+    "userId": "user-789",
+    "total": 99.99
+  },
+  "headers": {
+    "retry-count": 0,
+    "source": "order-service"
+  }
+}
+```
+
+### Popular Message Queue Systems
+
+#### Apache Kafka
+
+**Type:** Distributed streaming platform
+
+**Characteristics:**
+
+* High throughput (millions of messages/sec)
+* Persistent storage (messages retained)
+* Strong ordering guarantees
+* Partitioning for scalability
+* Replication for fault tolerance
+
+**Use cases:**
+
+* Event streaming
+* Log aggregation
+* Real-time analytics
+* Data pipelines
+
+**Example:**
+
+```javascript
+// Producer
+producer.send({
+    topic: 'orders',
+    messages: [{
+        key: 'user-123',
+        value: JSON.stringify(order)
+    }]
+});
+
+// Consumer
+consumer.subscribe({ topic: 'orders' });
+consumer.run({
+    eachMessage: async ({ message }) => {
+        const order = JSON.parse(message.value);
+        await processOrder(order);
+    }
+});
+```
+
+#### RabbitMQ
+
+**Type:** Message broker
+
+**Characteristics:**
+
+* Flexible routing (exchanges, bindings)
+* Multiple protocols (AMQP, MQTT, STOMP)
+* Message acknowledgments
+* Dead letter queues
+
+**Use cases:**
+
+* Task queues
+* RPC (request-reply)
+* Complex routing
+
+**Exchanges:**
+
+* **Direct:** Route to queue by routing key
+* **Topic:** Pattern-based routing
+* **Fanout:** Broadcast to all queues
+* **Headers:** Route by header values
+
+#### Amazon SQS/SNS
+
+**SQS (Simple Queue Service):**
+
+* Fully managed queue
+* Standard (at-least-once) or FIFO (exactly-once)
+* Auto-scaling
+
+**SNS (Simple Notification Service):**
+
+* Pub/sub messaging
+* Push to SQS, Lambda, HTTP, email, SMS
+
+#### Azure Service Bus
+
+**Characteristics:**
+
+* Enterprise messaging
+* Sessions for ordered processing
+* Transactions
+* Duplicate detection
+
+### Message Delivery Guarantees
+
+#### 1. At-Most-Once
+
+**Behavior:** Message delivered 0 or 1 times (may be lost)
+
+**How:** No acknowledgment required
+
+**Use cases:**
+
+* Metrics collection
+* Non-critical logs
+* When performance > reliability
+
+#### 2. At-Least-Once
+
+**Behavior:** Message delivered 1 or more times (may duplicate)
+
+**How:** Acknowledgment required, retry on failure
+
+**Use cases:**
+
+* Most common
+* Idempotent operations
+* Order processing (with deduplication)
+
+**Consumer must be idempotent:**
+
+```javascript
+// Store processed message IDs to avoid duplicates
+async function processMessage(message) {
+    if (await isProcessed(message.id)) {
+        return; // Already processed, skip
+    }
+
+    await doWork(message);
+    await markProcessed(message.id);
+}
+```
+
+#### 3. Exactly-Once
+
+**Behavior:** Message delivered exactly 1 time
+
+**How:** Complex coordination (transactions, deduplication)
+
+**Use cases:**
+
+* Financial transactions
+* Critical operations
+* When duplicates unacceptable
+
+**Challenges:**
+
+* Performance overhead
+* Requires transactional support
+* Hard to achieve in distributed systems
+
+### Best Practices
+
+#### 1. Idempotent Consumers
+
+Ensure processing same message multiple times has same effect as once.
+
+```javascript
+// Bad (not idempotent)
+function processOrder(order) {
+    inventory -= order.quantity; // Subtracts again on retry!
+}
+
+// Good (idempotent)
+function processOrder(order) {
+    if (!isProcessed(order.id)) {
+        inventory -= order.quantity;
+        markProcessed(order.id);
+    }
+}
+```
+
+#### 2. Dead Letter Queues (DLQ)
+
+Handle messages that fail repeatedly.
+
+```
+Queue → (Process) → Success
+   ↓
+ (Fail after 3 retries)
+   ↓
+Dead Letter Queue → Manual Review
+```
+
+#### 3. Message Expiration (TTL)
+
+Set time-to-live to avoid processing stale messages.
+
+```javascript
+producer.send({
+    body: message,
+    expiration: 3600000 // 1 hour
+});
+```
+
+#### 4. Monitoring
+
+Track:
+
+* Queue depth (backlog)
+* Processing rate
+* Error rate
+* Message age
+
+**Alert when:**
+
+* Queue depth growing
+* High error rate
+* Old messages in queue
+
+#### 5. Partitioning for Scalability
+
+```
+Topic: orders
+Partition 0: orders for users 0-999
+Partition 1: orders for users 1000-1999
+Partition 2: orders for users 2000-2999
+
+Consumers can process partitions in parallel
+```
+
+## Communication Models
+
+### 1. Push Model
+
+**Characteristics:**
+
+* Sender actively sends messages when available
+* Receiver waits for messages
+* Lower latency
+
+**Example:**
+
+```
+Server → (push) → Client WebSocket
+Email Server → (push) → Mobile Push Notification
+```
+
+**Pros:**
+
+* Real-time updates
+* Lower latency
+* Server controls flow
+
+**Cons:**
+
+* Receiver must be ready
+* Can overwhelm receiver
+* Connection must be maintained
+
+### 2. Pull Model
+
+**Characteristics:**
+
+* Receiver asks sender if messages available
+* Polling mechanism
+* Receiver controls rate
+
+**Example:**
+
+```
+Client → (poll every 5s) → Server: "Any new messages?"
+Consumer → (pull) → Message Queue
+```
+
+**Pros:**
+
+* Receiver controls rate
+* Works with intermittent connectivity
+* Simple to implement
+
+**Cons:**
+
+* Higher latency
+* Unnecessary polls (waste resources)
+* Not real-time
+
+**Optimization: Long Polling**
+
+```
+Client → Server: "Any messages?"
+Server waits (hold connection) until message arrives or timeout
+Server → Client: Message (or timeout)
+Client immediately sends next request
+```
+
+## Communication Protocols
+
+### HTTP (Hypertext Transfer Protocol)
+
+**Characteristics:**
+
+* Request-response protocol
+* Stateless
+* Text-based
+
+![HTTP Protocol](https://user-images.githubusercontent.com/11299574/128063728-9e3a888f-145a-4fe2-a568-59d5e89fb45f.png)
+
+**Methods:**
+
+* **GET:** Retrieve data
+* **POST:** Create data
+* **PUT:** Update data
+* **DELETE:** Delete data
+
+**Pros:**
+
+* ✅ Universal support
+* ✅ Well understood
+* ✅ Firewall-friendly
+* ✅ Caching support
+
+**Cons:**
+
+* ❌ Not real-time
+* ❌ Overhead (headers)
+* ❌ Half-duplex (one direction at a time)
+
+**Use cases:**
+
+* RESTful APIs
+* Traditional web apps
+* Simple request-response
+
+### Long Polling
+
+**How it works:**
+
+1. Client sends request
+2. Server holds connection open
+3. Server responds when data available or timeout
+4. Client immediately reconnects
+
+![Long Polling](https://user-images.githubusercontent.com/11299574/128063775-ea0171d7-0948-44fc-9b5b-20332454db08.png)
+
+**Example:**
+
+```javascript
+async function longPoll() {
+    while (true) {
+        const response = await fetch('/api/messages?timeout=30');
+        const messages = await response.json();
+
+        if (messages.length > 0) {
+            processMessages(messages);
+        }
+
+        // Immediately reconnect
+    }
+}
+```
+
+**Pros:**
+
+* More real-time than regular polling
+* Works over HTTP
+* No special infrastructure
+
+**Cons:**
+
+* Still some latency
+* Server resources (open connections)
+* Not truly bidirectional
+
+### WebSockets
+
+**Characteristics:**
+
+* Full-duplex communication
+* Persistent connection
+* Low latency
+* Binary or text data
+
+![WebSockets](https://user-images.githubusercontent.com/11299574/128063835-50f84831-9593-4154-a428-0cf5634bac53.png)
+
+**How it works:**
+
+1. HTTP handshake (upgrade request)
+2. Connection upgraded to WebSocket
+3. Bidirectional messages
+4. Connection stays open
+
+**Example:**
+
+```javascript
+// Client
+const ws = new WebSocket('wss://example.com/socket');
+
+ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'subscribe', channel: 'chat' }));
+};
+
+ws.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    displayMessage(message);
+};
+
+// Server (Node.js)
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({ port: 8080 });
+
+wss.on('connection', (ws) => {
+    ws.on('message', (data) => {
+        // Broadcast to all clients
+        wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(data);
+            }
+        });
+    });
+});
+```
+
+**Pros:**
+
+* ✅ True real-time, bidirectional
+* ✅ Low latency
+* ✅ Less overhead than HTTP polling
+* ✅ Server can push anytime
+
+**Cons:**
+
+* ❌ More complex than HTTP
+* ❌ Firewall/proxy issues
+* ❌ Connection management needed
+* ❌ No automatic reconnection
+
+**Use cases:**
+
+* Chat applications
+* Real-time gaming
+* Live dashboards
+* Collaborative editing
+* Financial tickers
+
+### gRPC
+
+**Characteristics:**
+
+* RPC (Remote Procedure Call) framework
+* Protocol Buffers (binary serialization)
+* HTTP/2 based
+* Supports streaming
+
+**Example:**
+
+```protobuf
+// Protocol Buffer definition
+service UserService {
+    rpc GetUser(UserRequest) returns (UserResponse);
+    rpc StreamUsers(Empty) returns (stream UserResponse);
+}
+
+message UserRequest {
+    int32 id = 1;
+}
+
+message UserResponse {
+    int32 id = 1;
+    string name = 2;
+    string email = 3;
+}
+```
+
+**Pros:**
+
+* Very fast (binary)
+* Strongly typed
+* Code generation
+* Bidirectional streaming
+* Built-in auth, load balancing
+
+**Cons:**
+
+* Not human-readable
+* Browser support limited
+* Learning curve
+
+**Use cases:**
+
+* Microservice communication
+* Mobile clients
+* High-performance APIs
+
+### GraphQL
+
+**Characteristics:**
+
+* Query language for APIs
+* Client specifies exact data needed
+* Single endpoint
+
+**Example:**
+
+```graphql
+# Query
+query {
+    user(id: 123) {
+        name
+        email
+        posts {
+            title
+            createdAt
+        }
+    }
+}
+
+# Response
+{
+    "data": {
+        "user": {
+            "name": "John Doe",
+            "email": "john@example.com",
+            "posts": [
+                { "title": "Hello", "createdAt": "2024-01-01" }
+            ]
+        }
+    }
+}
+```
+
+**Pros:**
+
+* No over-fetching
+* Single request for multiple resources
+* Strong typing (schema)
+* Versioning not needed
+
+**Cons:**
+
+* Complexity
+* Caching harder
+* Learning curve
+* Can be inefficient (N+1 queries)
+
+## Choosing Communication Protocol
+
+| Protocol | Latency | Complexity | Bidirectional | Use Case |
+|----------|---------|-----------|---------------|----------|
+| **HTTP** | High | Low | No | REST APIs, web |
+| **Long Polling** | Medium | Low | Pseudo | Simple real-time |
+| **WebSockets** | Very Low | Medium | Yes | Chat, gaming, live updates |
+| **gRPC** | Low | High | Yes | Microservices |
+| **GraphQL** | Medium | High | No | Complex data requirements |
+
+## Summary
+
+**Message Queues:**
+
+* Enable asynchronous communication
+* Decouple producers and consumers
+* Provide reliability and scalability
+* Choose based on throughput, ordering, delivery guarantees
+
+**Communication Models:**
+
+* **Push:** Real-time, sender-driven
+* **Pull:** Receiver-driven, simpler
+
+**Protocols:**
+
+* **HTTP:** Universal, simple, request-response
+* **Long Polling:** Better than polling, still HTTP-based
+* **WebSockets:** Real-time, bidirectional, persistent
+* **gRPC:** High-performance microservices
+* **GraphQL:** Flexible data fetching
+
+Choose based on:
+
+* Real-time requirements
+* Complexity tolerance
+* Infrastructure capabilities
+* Performance needs

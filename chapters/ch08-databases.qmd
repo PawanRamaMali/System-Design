@@ -1,0 +1,710 @@
+# Database Concepts
+
+## Introduction
+
+A **database** is a collection of information that is organized for easy access, management, and updates. In distributed systems, understanding database concepts like CAP theorem, ACID properties, replication, and sharding is crucial.
+
+## The Three Guarantees of Distributed Systems
+
+Before diving into database-specific concepts, let's understand the three fundamental guarantees that distributed database systems strive for:
+
+### 1. Consistency
+
+**Definition:** Every node in a distributed cluster returns the same, most recent, successful write.
+
+**What it means:**
+
+* All clients see the same data at the same time
+* Reads reflect the latest writes
+* No stale data
+
+**Example:**
+
+```
+User updates profile: name = "Jane"
+Immediately after, any read returns "Jane" (not old value)
+```
+
+### 2. Availability
+
+**Definition:** Every non-failing node returns a response for all read and write requests in a reasonable amount of time.
+
+**What it means:**
+
+* System continues to operate even during failures
+* Requests always get responses
+* No request is ignored
+
+**Example:**
+
+```
+Even if 2 out of 5 database nodes fail,
+the system still processes read/write requests
+```
+
+### 3. Partition Tolerance
+
+**Definition:** The system continues to function despite network partitions that prevent some nodes from communicating.
+
+**What it means:**
+
+* System works even when network splits
+* Nodes can be temporarily disconnected
+* Handles network failures gracefully
+
+**Example:**
+
+```
+Data center network issue causes split
+System continues operating on both sides
+```
+
+![Distributed System Guarantees](https://user-images.githubusercontent.com/11299574/128065514-48e2a78f-58b8-4f40-831a-447f57214b29.png)
+
+## CAP Theorem
+
+**CAP theorem** (Brewer's theorem) states:
+
+> **It is impossible for a distributed system to simultaneously provide more than two out of three guarantees: Consistency, Availability, and Partition Tolerance.**
+
+![CAP Theorem](https://user-images.githubusercontent.com/11299574/128065535-d27c9185-0978-410d-b775-fa10d7024465.png)
+
+### The Three Combinations
+
+Since network partitions **will** happen in distributed systems, partition tolerance is required. This leaves us choosing between:
+
+#### CP (Consistency + Partition Tolerance)
+
+**Characteristics:**
+
+* Sacrifices availability for consistency
+* During partition, system may refuse requests
+* Ensures all nodes have same data
+
+**When to choose:**
+
+* Financial transactions
+* Inventory management
+* When stale data is unacceptable
+
+**Examples:**
+
+* **MongoDB:** Can be configured for strong consistency
+* **HBase:** Strong consistency, may become unavailable
+* **Redis:** (with synchronous replication)
+* **ZooKeeper:** Coordination service requiring consistency
+
+**Trade-off:**
+
+```
+Network partition occurs
+→ System blocks writes to maintain consistency
+→ Some requests fail or timeout
+```
+
+#### AP (Availability + Partition Tolerance)
+
+**Characteristics:**
+
+* Sacrifices consistency for availability
+* Always responds to requests
+* May return stale data
+* Eventually consistent
+
+**When to choose:**
+
+* Social media feeds
+* Shopping carts
+* Analytics data
+* When availability > immediate consistency
+
+**Examples:**
+
+* **Cassandra:** Highly available, eventually consistent
+* **DynamoDB:** Designed for availability
+* **CouchDB:** Eventually consistent
+* **Riak:** Optimized for availability
+
+**Trade-off:**
+
+```
+Network partition occurs
+→ System accepts writes on both sides
+→ Data temporarily inconsistent
+→ Conflict resolution needed later
+```
+
+#### CA (Consistency + Availability)
+
+**Not possible in distributed systems with partitions!**
+
+**Why:** Network partitions will happen. You must handle them.
+
+**Exception:** Single-node databases (not distributed)
+
+* Traditional **RDBMS** on single server (MySQL, PostgreSQL)
+* Not fault-tolerant
+* Not partition-tolerant (because no partitions exist)
+
+### Choosing Your Database Based on CAP
+
+| Requirement | Choice | Examples |
+|------------|--------|----------|
+| Bank transactions | **CP** | PostgreSQL (with sync replication), HBase |
+| User sessions | **AP** | Cassandra, DynamoDB |
+| Social feed | **AP** | Cassandra, DynamoDB |
+| Inventory | **CP** | MongoDB, PostgreSQL |
+| Analytics | **AP** | Cassandra, Riak |
+
+## ACID Properties
+
+**ACID** ensures database transactions are processed reliably. Each transaction should be ACID compliant to maintain database integrity.
+
+### A - Atomicity
+
+**Definition:** Transaction is all-or-nothing.
+
+**What it means:**
+
+* Either all operations succeed, or all fail
+* No partial transactions
+* System remains in consistent state
+
+**Example:**
+
+```sql
+BEGIN TRANSACTION;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+
+-- If second UPDATE fails, first UPDATE is rolled back
+-- Money is never "lost" in transit
+```
+
+### C - Consistency
+
+**Definition:** Transaction brings database from one valid state to another.
+
+**What it means:**
+
+* All constraints are enforced
+* Referential integrity maintained
+* Business rules applied
+
+**Example:**
+
+```sql
+-- Constraint: balance >= 0
+UPDATE accounts SET balance = balance - 1000 WHERE id = 1;
+-- If this violates constraint (negative balance),
+-- transaction is rejected
+```
+
+### I - Isolation
+
+**Definition:** Concurrent transactions don't interfere with each other.
+
+**What it means:**
+
+* Transactions appear to execute sequentially
+* Intermediate state not visible to others
+* Prevents dirty reads, phantom reads
+
+**Isolation Levels:**
+
+1. **Read Uncommitted:** Lowest isolation (dirty reads possible)
+2. **Read Committed:** No dirty reads
+3. **Repeatable Read:** Same row read multiple times returns same value
+4. **Serializable:** Highest isolation (transactions fully isolated)
+
+**Example:**
+
+```sql
+-- Transaction 1
+BEGIN;
+UPDATE products SET stock = stock - 1 WHERE id = 5;
+-- Not yet committed
+
+-- Transaction 2 (cannot see uncommitted changes)
+SELECT stock FROM products WHERE id = 5;
+-- Returns original value until Transaction 1 commits
+```
+
+### D - Durability
+
+**Definition:** Committed transactions survive permanently, even after crashes.
+
+**What it means:**
+
+* Once committed, data is saved
+* Survives power failures, crashes
+* Write-ahead logging (WAL)
+
+**Example:**
+
+```sql
+INSERT INTO orders (id, total) VALUES (123, 500);
+COMMIT;  -- Now persisted to disk
+
+-- Even if database crashes 1 second later,
+-- order 123 will exist when system restarts
+```
+
+### ACID in Distributed Systems
+
+**Challenges:**
+
+* Harder to maintain across multiple nodes
+* Performance trade-offs
+* Network latency
+
+**Solutions:**
+
+* **Two-Phase Commit (2PC):** Coordinated commits across nodes
+* **Saga Pattern:** Compensating transactions for long-running workflows
+* **Event Sourcing:** Store events, derive state
+
+## Database Replication
+
+**Replication** is the process of copying data from one database to one or more databases.
+
+### Why Replicate?
+
+**Benefits:**
+
+* **High Availability:** Failover to replica if primary fails
+* **Read Scaling:** Distribute read queries across replicas
+* **Geographic Distribution:** Serve users from nearby replicas
+* **Backup:** Real-time backup copies
+
+### Consistency Patterns
+
+#### 1. Strong Consistency
+
+**Definition:** Read always returns most recent write.
+
+**How it works:**
+
+* Read waits for all replicas to acknowledge write
+* Synchronous replication
+* Higher latency
+
+**When to use:**
+
+* Financial systems
+* Inventory management
+* When accuracy is critical
+
+**Example:**
+
+```
+Write to primary → Wait for all replicas to confirm → Return success
+Read from any node → Always get latest value
+```
+
+#### 2. Eventual Consistency
+
+**Definition:** Reads may return stale data temporarily, but will eventually reflect all writes.
+
+**How it works:**
+
+* Asynchronous replication
+* Writes return immediately
+* Replicas catch up over time
+
+**When to use:**
+
+* Social media
+* Non-critical data
+* High throughput required
+
+**Example:**
+
+```
+Write to primary → Return success immediately
+Replicas update asynchronously (may take seconds)
+Reads might return old value briefly
+```
+
+**Conflict Resolution:**
+
+* Last Write Wins (LWW)
+* Vector clocks
+* Application-level resolution
+
+### Replication Architectures
+
+![Replication Architectures](https://user-images.githubusercontent.com/11299574/128065634-377c71cf-2c2f-4332-8798-dee269575f79.png)
+
+#### 1. Single-Leader (Primary-Replica)
+
+**How it works:**
+
+* One primary (leader) accepts writes
+* Multiple replicas (followers) receive updates
+* Replicas handle read queries
+
+**Pros:**
+
+* Simple to implement
+* No write conflicts
+* Good read scalability
+
+**Cons:**
+
+* Single point of failure for writes
+* Replication lag on heavy writes
+* Primary can be bottleneck
+
+**Example:** MySQL Master-Slave, PostgreSQL Streaming Replication
+
+#### 2. Multi-Leader (Multi-Master)
+
+**How it works:**
+
+* Multiple nodes accept writes
+* Each leader replicates to others
+* Conflict resolution required
+
+**Pros:**
+
+* Better write throughput
+* Lower latency (write to nearest leader)
+* No single point of failure
+
+**Cons:**
+
+* Complex conflict resolution
+* Harder to maintain consistency
+* More complex setup
+
+**Example:** MySQL Multi-Master, Cassandra (with LWW)
+
+#### 3. Leaderless (Peer-to-Peer)
+
+**How it works:**
+
+* All nodes equal
+* Client writes to multiple nodes
+* Quorum-based reads/writes
+
+**Quorum:**
+
+```
+N = Total replicas
+W = Write quorum (nodes that must acknowledge write)
+R = Read quorum (nodes queried for read)
+
+Strong consistency when: W + R > N
+
+Example: N=5, W=3, R=3
+(3 + 3 > 5, so consistent)
+```
+
+**Pros:**
+
+* High availability
+* No single point of failure
+* Good for geo-distribution
+
+**Cons:**
+
+* Complex conflict resolution
+* Network overhead
+* Eventual consistency
+
+**Example:** Cassandra, DynamoDB, Riak
+
+## Sharding (Horizontal Partitioning)
+
+**Sharding** divides a database into smaller pieces (shards), each stored on separate servers.
+
+![Database Sharding](https://user-images.githubusercontent.com/11299574/128065650-884973ff-dea4-469a-b0c2-d3fe8f776212.png)
+
+### Why Shard?
+
+**Reasons:**
+
+* **Data Size:** Single database too large
+* **Performance:** Distribute load across servers
+* **Geographic:** Data locality (GDPR compliance)
+* **Cost:** Horizontal scaling cheaper than vertical
+
+### Factors to Consider
+
+#### 1. Data Size
+
+* Will one server have enough storage?
+* Growth rate?
+
+#### 2. Performance
+
+* Query throughput requirements
+* Read/write ratio
+* Latency targets
+
+#### 3. Geographic Distribution
+
+* User location
+* Data sovereignty laws
+* Latency requirements
+
+#### 4. Cost
+
+* Vertical scaling limits
+* Horizontal scaling economics
+
+### Sharding Strategies
+
+#### 1. Range-Based Sharding
+
+**How it works:** Divide data based on range of values.
+
+**Example:**
+
+```
+Users A-F → Shard 1
+Users G-M → Shard 2
+Users N-Z → Shard 3
+```
+
+**Pros:**
+
+* Simple to implement
+* Range queries easy
+
+**Cons:**
+
+* Uneven distribution (hotspots)
+* Some ranges more popular
+
+#### 2. Hash-Based Sharding
+
+**How it works:** Hash the shard key, use modulo to determine shard.
+
+**Example:**
+
+```
+shard_id = hash(user_id) % number_of_shards
+```
+
+**Pros:**
+
+* Even distribution
+* No hotspots
+
+**Cons:**
+
+* Resharding difficult (when adding shards)
+* Range queries require all shards
+
+#### 3. Geo-Based Sharding
+
+**How it works:** Shard by geographic region.
+
+**Example:**
+
+```
+US users → US shard
+EU users → EU shard
+Asia users → Asia shard
+```
+
+**Pros:**
+
+* Low latency
+* Data sovereignty compliance
+* Logical separation
+
+**Cons:**
+
+* Uneven growth
+* Cross-region queries complex
+
+#### 4. Consistent Hashing
+
+**How it works:** Use consistent hashing algorithm (see Chapter 6).
+
+**Pros:**
+
+* Minimal data movement on resharding
+* Even distribution with virtual nodes
+
+**Cons:**
+
+* More complex implementation
+
+### Challenges of Sharding
+
+**1. Joins Across Shards**
+
+* Expensive
+* Denormalize data
+* Application-level joins
+
+**2. Transactions Across Shards**
+
+* Two-phase commit
+* Saga pattern
+* Avoid when possible
+
+**3. Rebalancing**
+
+* Adding/removing shards
+* Data migration
+* Downtime or complexity
+
+**4. Shard Key Selection**
+
+* Choose wisely (hard to change)
+* High cardinality
+* Even distribution
+
+## NoSQL Databases
+
+**NoSQL** databases provide alternatives to relational databases for specific use cases.
+
+### Types of NoSQL Databases
+
+#### 1. Key-Value Store
+
+**Structure:** Simple key → value mapping
+
+**Characteristics:**
+
+* Very fast
+* Simple API (GET, PUT, DELETE)
+* No schema
+* Limited query capabilities
+
+**Examples:**
+
+* **Redis:** In-memory, data structures
+* **Amazon DynamoDB:** Managed, scalable
+* **Voldemort:** Distributed
+
+**Use cases:**
+
+* Session storage
+* Caching
+* Shopping carts
+* User preferences
+
+#### 2. Column-Oriented (Wide-Column)
+
+**Structure:** Tables with rows and dynamic columns
+
+**Characteristics:**
+
+* Store data by column, not row
+* Efficient for analytical queries
+* Scalable
+
+**Examples:**
+
+* **Cassandra:** Distributed, highly available
+* **HBase:** Hadoop-based
+* **Google Bigtable:** Google's internal system
+
+**Use cases:**
+
+* Time-series data
+* Analytics
+* Event logging
+* IoT data
+
+#### 3. Document-Based
+
+**Structure:** Store documents (JSON, BSON, XML)
+
+**Characteristics:**
+
+* Flexible schema
+* Rich query capabilities
+* Nested data structures
+
+**Examples:**
+
+* **MongoDB:** Popular, feature-rich
+* **CouchDB:** HTTP-based API
+* **Amazon DocumentDB:** MongoDB-compatible
+
+**Use cases:**
+
+* Content management
+* User profiles
+* Product catalogs
+* Mobile apps
+
+**Example Document:**
+
+```json
+{
+  "_id": "user123",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "addresses": [
+    {
+      "type": "home",
+      "street": "123 Main St",
+      "city": "New York"
+    }
+  ],
+  "preferences": {
+    "newsletter": true,
+    "theme": "dark"
+  }
+}
+```
+
+#### 4. Graph-Based
+
+**Structure:** Nodes (entities) and edges (relationships)
+
+**Characteristics:**
+
+* Optimized for connected data
+* Efficient traversals
+* Relationship queries
+
+**Examples:**
+
+* **Neo4j:** Popular graph database
+* **Amazon Neptune:** Managed graph DB
+* **ArangoDB:** Multi-model
+
+**Use cases:**
+
+* Social networks
+* Recommendation engines
+* Fraud detection
+* Knowledge graphs
+
+**Example:**
+
+```cypher
+// Find friends of friends
+MATCH (user:Person {name: "Alice"})-[:FRIEND]->(friend)-[:FRIEND]->(fof)
+RETURN fof.name
+```
+
+## Summary
+
+Choosing the right database involves understanding:
+
+* **CAP theorem:** Trade-offs in distributed systems
+* **ACID properties:** Transaction guarantees
+* **Replication:** High availability and read scaling
+* **Sharding:** Horizontal scaling for large datasets
+* **NoSQL types:** Different data models for different needs
+
+**Decision factors:**
+
+* Data structure
+* Query patterns
+* Consistency requirements
+* Scale requirements
+* Cost constraints
+
+Next chapter will explore web and application servers in system design.

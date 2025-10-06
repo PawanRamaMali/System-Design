@@ -1,0 +1,467 @@
+# Caching
+
+## What is Caching?
+
+**Caching** is the process of storing frequently accessed data in fast memory (cache) for quick retrieval. Instead of fetching data from slower storage (disk, database) every time, the system first checks if it exists in the cache.
+
+## The 80/20 Rule
+
+A famous principle in caching:
+
+> **20% of data is accessed 80% of the time**
+
+This means:
+
+* Small subset of data accounts for most requests
+* Cache this "hot" data for maximum benefit
+* Don't need to cache everything
+
+## Why Cache?
+
+**Benefits:**
+
+* ✅ Reduced latency (faster response times)
+* ✅ Reduced database load
+* ✅ Lower bandwidth usage
+* ✅ Cost savings (fewer database reads)
+* ✅ Better scalability
+* ✅ Improved user experience
+
+**Trade-offs:**
+
+* ❌ Additional complexity
+* ❌ Potential data staleness
+* ❌ Memory costs
+* ❌ Cache invalidation challenges
+
+## Cache Hierarchy
+
+**Speed vs Size trade-off:**
+
+```
+CPU Cache (L1/L2/L3) → Fastest, Smallest
+RAM → Fast, Medium
+SSD → Medium, Large
+HDD → Slow, Largest
+Network/Database → Slowest, Distributed
+```
+
+## Cache Invalidation Strategies
+
+> "There are only two hard things in Computer Science: cache invalidation and naming things." — Phil Karlton
+
+### 1. Write-Through Cache
+
+**How it works:** Data is written to both cache and database simultaneously.
+
+```
+Write Request → [Cache + Database] → Response
+Read Request → Cache (if hit) or Database (if miss)
+```
+
+**Characteristics:**
+
+* ✅ Cache always consistent with database
+* ✅ Data not lost on cache failure
+* ✅ Simple to implement
+* ❌ Higher write latency (write to both)
+* ❌ Unnecessary cache writes for rarely-read data
+
+**When to use:**
+
+* Applications requiring strong consistency
+* Read-heavy workloads
+* When write latency is acceptable
+
+![Write-Through Cache](https://user-images.githubusercontent.com/11299574/128065045-d69782c6-3dc6-4074-b31d-1b2e3b90038b.png)
+
+### 2. Write-Around Cache
+
+**How it works:** Data is written only to database, bypassing cache. Cache is invalidated/marked stale.
+
+```
+Write Request → Database → Response
+(Cache entry marked invalid)
+Read Request → Database (cache miss) → Update Cache
+```
+
+**Characteristics:**
+
+* ✅ Reduces cache churn for infrequently-read data
+* ✅ No unnecessary cache writes
+* ❌ Read penalty after write (cache miss)
+* ❌ First read after write is slow
+
+**When to use:**
+
+* Write-heavy workloads
+* Data written but not immediately read
+* When cache space is limited
+
+### 3. Write-Back Cache (Write-Behind)
+
+**How it works:** Data written to cache first, asynchronously written to database later.
+
+```
+Write Request → Cache → Response (immediate)
+Background Process → Database (asynchronous)
+```
+
+**Characteristics:**
+
+* ✅ Very fast writes
+* ✅ Reduced database load
+* ✅ Better write performance
+* ❌ Risk of data loss (if cache fails before DB write)
+* ❌ More complex to implement
+* ❌ Eventual consistency
+
+**When to use:**
+
+* High write throughput required
+* Write latency critical
+* Acceptable to lose recent writes in failure
+* Social media updates, view counts
+
+## Cache Eviction Policies
+
+When cache is full, which item should be removed?
+
+### 1. Least Recently Used (LRU)
+
+**Strategy:** Remove the item that hasn't been accessed for the longest time.
+
+**Implementation:** Doubly-linked list + hash map
+
+**Pros:**
+
+* Effective for most use cases
+* Balances recency and frequency
+* Industry standard
+
+**Cons:**
+
+* Moderate implementation complexity
+* Doesn't handle periodic access well
+
+**Example:**
+
+```
+Cache: [A, B, C, D] (D is most recent)
+Access: E
+Result: [B, C, D, E] (A evicted)
+```
+
+### 2. Least Frequently Used (LFU)
+
+**Strategy:** Remove the item accessed least frequently.
+
+**Pros:**
+
+* Good for items with varying access patterns
+* Retains popular items
+
+**Cons:**
+
+* New items may be evicted quickly
+* Stale popular items stay too long
+* More complex to implement
+
+### 3. First In First Out (FIFO)
+
+**Strategy:** Remove the oldest item regardless of access.
+
+**Pros:**
+
+* Simple to implement
+* Low overhead
+
+**Cons:**
+
+* Ignores access patterns
+* May evict frequently-used items
+
+**When to use:**
+
+* Simple caching needs
+* Items have similar access patterns
+
+### 4. Most Recently Used (MRU)
+
+**Strategy:** Remove the most recently accessed item.
+
+**When to use:**
+
+* Specific access patterns (sequential scans)
+* Opposite of LRU behavior needed
+
+### 5. Random Replacement (RR)
+
+**Strategy:** Randomly select item to evict.
+
+**Pros:**
+
+* Simplest to implement
+* No overhead
+* Surprisingly effective at scale
+
+**Cons:**
+
+* Unpredictable
+* May evict hot data
+
+### 6. Last In First Out (LIFO)
+
+**Strategy:** Remove the most recently added item.
+
+**Rarely used in practice.**
+
+![Cache Eviction Policies](https://user-images.githubusercontent.com/11299574/128065084-6ce8880b-1c49-429f-8d4c-8a05079f4e87.png)
+
+## Caching Layers
+
+### Client-Side Caching
+
+**Browser cache:**
+
+* HTTP cache headers (Cache-Control, ETag)
+* LocalStorage / SessionStorage
+* Service Workers
+
+### CDN Caching
+
+* Caches static assets geographically
+* Reduces origin server load
+* Improves global performance
+
+### Application-Level Caching
+
+**In-memory cache within application:**
+
+* Process-level cache (local variables)
+* Shared cache (Redis, Memcached)
+
+### Database Caching
+
+* Query result cache
+* Object cache
+* Prepared statement cache
+
+## Distributed Caching
+
+For large-scale systems, cache must be distributed across multiple servers.
+
+![Distributed Caching](https://user-images.githubusercontent.com/11299574/128065250-f6c3049b-7def-407a-aa50-20e61ef0974a.png)
+
+**Popular distributed caches:**
+
+* **Redis:** In-memory, supports data structures, persistence
+* **Memcached:** Simple, fast, key-value store
+* **Amazon ElastiCache:** Managed Redis/Memcached
+
+**Challenges:**
+
+* Cache coherence across nodes
+* Consistent hashing for distribution
+* Handling node failures
+* Network latency between cache nodes
+
+### Consistent Hashing
+
+Distributes cache keys across nodes such that:
+
+* Adding/removing nodes minimizes key redistribution
+* Avoids cache stampede
+* Ensures even distribution
+
+## Cache Patterns
+
+### Cache-Aside (Lazy Loading)
+
+**Flow:**
+
+1. Application checks cache
+2. If miss, query database
+3. Store result in cache
+4. Return data
+
+**Pros:**
+
+* Only requested data cached
+* Cache failures don't bring system down
+
+**Cons:**
+
+* Initial request slow (cache miss)
+* Stale data possible
+
+### Read-Through
+
+**Flow:**
+
+1. Application queries cache
+2. Cache is responsible for loading from database on miss
+3. Return data
+
+**Difference from cache-aside:** Cache manages database interaction.
+
+### Refresh-Ahead
+
+**Flow:**
+
+* Cache automatically refreshes data before expiration
+* Based on access patterns
+
+**Pros:**
+
+* Reduced latency
+* No cache miss delays
+
+**Cons:**
+
+* May refresh unused data
+* More complex
+
+## Cache Invalidation Strategies
+
+### Time-To-Live (TTL)
+
+**Strategy:** Data expires after fixed time period.
+
+```
+SET user:123 "John Doe" EX 3600  # Expires in 1 hour
+```
+
+**When to use:**
+
+* Data changes predictably
+* Stale data acceptable
+* Simplicity preferred
+
+### Event-Based Invalidation
+
+**Strategy:** Invalidate cache when data changes.
+
+```
+# On user update
+UPDATE users SET name = 'Jane' WHERE id = 123;
+DELETE cache:user:123;
+```
+
+**When to use:**
+
+* Strong consistency required
+* Update frequency moderate
+
+### Cache Tags
+
+**Strategy:** Tag related cache entries, invalidate by tag.
+
+```
+Cache entry: product:123 [tags: category:electronics, brand:sony]
+Invalidate: All entries with tag brand:sony
+```
+
+## Cache Monitoring
+
+**Key metrics:**
+
+* **Hit Rate:** Cache hits / Total requests (aim for >80%)
+* **Miss Rate:** Cache misses / Total requests
+* **Eviction Rate:** Items evicted / Time period
+* **Memory Usage:** Current cache size / Max size
+* **Latency:** Cache response time
+
+## Best Practices
+
+### 1. Choose Appropriate TTL
+
+* Short TTL: Frequently changing data
+* Long TTL: Rarely changing data
+* No expiry: Static/immutable data
+
+### 2. Cache at Multiple Levels
+
+* Browser cache
+* CDN
+* Application cache
+* Database query cache
+
+### 3. Monitor Cache Performance
+
+* Track hit/miss ratio
+* Alert on sudden changes
+* Analyze access patterns
+
+### 4. Handle Cache Failures Gracefully
+
+* Fallback to database
+* Circuit breaker pattern
+* Don't let cache failure bring down system
+
+### 5. Avoid Cache Stampede
+
+**Problem:** Many requests for same expired key hit database simultaneously.
+
+**Solutions:**
+
+* Probabilistic early expiration
+* Lock-based loading
+* Refresh-ahead caching
+
+### 6. Serialize Appropriately
+
+* Use efficient formats (Protocol Buffers, MessagePack)
+* Consider compression for large values
+* Balance size vs. serialization cost
+
+## Common Pitfalls
+
+### 1. Caching Too Much
+
+* Wastes memory
+* Reduces hit rate
+* Increases evictions
+
+### 2. Caching Too Little
+
+* Misses optimization opportunities
+* Higher database load
+
+### 3. Inconsistent Cache Keys
+
+* Use standardized key naming
+* Include version in key if needed
+* Document key structure
+
+### 4. Not Handling Cache Misses
+
+* Always have fallback logic
+* Implement retry mechanisms
+* Log and monitor misses
+
+## Cache Size Calculation
+
+**Example calculation:**
+
+```
+Average object size: 1 KB
+Request rate: 1000 req/sec
+Hit rate goal: 80%
+Working set: 20% of total data
+
+Required cache size = (1000 req/sec × 3600 sec × 1 KB) × 0.2
+                    = 720 MB per hour of unique requests
+```
+
+## Summary
+
+Caching is one of the most effective techniques for improving system performance and scalability. The key is to:
+
+* Cache the right data (80/20 rule)
+* Choose appropriate invalidation strategy
+* Monitor and tune cache performance
+* Handle failures gracefully
+* Use distributed caching for scale
+
+Properly implemented caching can reduce latency by 10-100x and dramatically reduce database load.

@@ -1,0 +1,490 @@
+# Storage and RAID
+
+## Storage Systems Overview
+
+Storage is a critical component of system design. Understanding different storage architectures and redundancy techniques is essential for building reliable systems.
+
+## Object Store
+
+**Object storage** (or object-based storage) is a storage architecture that manages data as objects, unlike traditional file systems which manage data as files in a hierarchical structure.
+
+### Characteristics
+
+**Objects consist of:**
+
+* **Data:** The actual content (file, image, video, etc.)
+* **Metadata:** Information about the data (tags, timestamps, permissions)
+* **Unique Identifier:** Globally unique ID for retrieval
+
+### Key Features
+
+* **Flat namespace:** No hierarchical directory structure
+* **Scalability:** Easily scale to petabytes
+* **Metadata-rich:** Extensive custom metadata support
+* **HTTP-based access:** RESTful APIs (S3-compatible)
+* **Durability:** Built-in replication and redundancy
+
+### Use Cases
+
+* **Static assets:** Images, videos, documents
+* **Backup and archiving:** Long-term data retention
+* **Big data analytics:** Data lakes
+* **Content distribution:** Media streaming
+
+### Popular Object Storage Services
+
+* **Amazon S3:** Industry standard, highly durable (99.999999999%)
+* **Google Cloud Storage:** Global edge caching
+* **Azure Blob Storage:** Hot, cool, and archive tiers
+* **MinIO:** Open-source, S3-compatible
+* **Ceph:** Open-source, distributed
+
+### Example: Storing User Uploads
+
+```python
+# Upload file to object storage
+s3_client.put_object(
+    Bucket='user-uploads',
+    Key='users/123/profile.jpg',
+    Body=file_data,
+    Metadata={
+        'user-id': '123',
+        'upload-date': '2024-01-01',
+        'content-type': 'image/jpeg'
+    }
+)
+
+# Retrieve file
+object = s3_client.get_object(
+    Bucket='user-uploads',
+    Key='users/123/profile.jpg'
+)
+```
+
+## RAID (Redundant Array of Independent Disks)
+
+**RAID** is a technology that combines multiple physical disk drives into a single logical unit to improve:
+
+* **Performance:** Data striping across disks
+* **Reliability:** Data redundancy and fault tolerance
+* **Capacity:** Aggregated storage space
+
+### How RAID Works
+
+A **RAID controller** manages all operations:
+
+* Distributes data across disks
+* Handles parity calculations
+* Monitors disk health
+* Manages rebuilds after failure
+
+### Why Use RAID?
+
+**Without RAID:**
+
+* Single disk failure = data loss
+* Limited performance
+* No redundancy
+
+**With RAID:**
+
+* Fault tolerance (depends on level)
+* Improved read/write performance
+* Hot-swappable drives
+* Automatic rebuild capabilities
+
+## RAID Levels
+
+### RAID 0 – Striping
+
+**Configuration:** Minimum 2 disks
+
+**How it works:**
+
+* Data split into blocks
+* Blocks distributed across all disks
+* No redundancy
+
+![RAID 0 - Striping](https://user-images.githubusercontent.com/11299574/128065290-f9f1b4c4-8eae-4925-9e33-c01cad07db53.png)
+
+**Example:**
+
+```
+File: [A1, A2, A3, A4]
+Disk 1: [A1, A3]
+Disk 2: [A2, A4]
+```
+
+**Characteristics:**
+
+* ✅ Maximum performance (parallel reads/writes)
+* ✅ Full capacity utilization
+* ✅ Simple to implement
+* ❌ **No fault tolerance** (any disk failure = total data loss)
+* ❌ Reliability decreases with more disks
+
+**Use cases:**
+
+* Temporary data
+* Video editing workstations
+* When performance > data safety
+* **Not recommended for production systems**
+
+**Capacity:** Total of all disks (2 x 1TB = 2TB)
+
+---
+
+### RAID 1 – Mirroring
+
+**Configuration:** Minimum 2 disks
+
+**How it works:**
+
+* Data duplicated across all disks
+* Each disk contains identical copy
+
+![RAID 1 - Mirroring](https://user-images.githubusercontent.com/11299574/128065321-1f1a95c9-4789-442a-88ce-fac1381e95ee.png)
+
+**Example:**
+
+```
+File: [A1, A2, A3, A4]
+Disk 1: [A1, A2, A3, A4]
+Disk 2: [A1, A2, A3, A4]  ← Exact copy
+```
+
+**Characteristics:**
+
+* ✅ Excellent fault tolerance
+* ✅ Fast read performance (parallel reads)
+* ✅ Simple to implement
+* ✅ Easy recovery (just copy from working disk)
+* ❌ 50% capacity loss (2 x 1TB = 1TB usable)
+* ❌ Write performance same as single disk
+* ❌ Expensive (need 2x disks)
+
+**Use cases:**
+
+* Operating system drives
+* Mission-critical databases
+* When data safety is paramount
+* Small storage needs with high reliability
+
+**Capacity:** Half of total (2 x 1TB = 1TB usable)
+
+---
+
+### RAID 2 – Bit-level Striping with Hamming Code
+
+**Configuration:** Multiple disks with dedicated ECC disks
+
+**How it works:**
+
+* Data striped at bit level
+* Hamming code for error correction
+* Dedicated parity disks
+
+![RAID 2](https://user-images.githubusercontent.com/11299574/128065348-187a37ab-263f-477b-951c-00cad4ae359a.png)
+
+**Characteristics:**
+
+* ❌ **Obsolete** (replaced by RAID 3, 4, 5)
+* ❌ Complex implementation
+* ❌ Many parity disks required
+
+**Use cases:**
+
+* **Rarely used in practice**
+* Historical significance only
+
+---
+
+### RAID 3 – Byte-level Striping with Parity
+
+**Configuration:** Minimum 3 disks (data + 1 parity)
+
+**How it works:**
+
+* Data striped at byte level
+* Single dedicated parity disk
+* Parity allows reconstruction
+
+![RAID 3](https://user-images.githubusercontent.com/11299574/128065365-27317db2-4d7e-4987-8782-f71cfecb8fa1.png)
+
+**Characteristics:**
+
+* ✅ Good for sequential access
+* ✅ High data transfer rates
+* ❌ Poor random access performance
+* ❌ Parity disk can be bottleneck
+* ❌ **Rarely used** (RAID 5 preferred)
+
+**Use cases:**
+
+* Video streaming servers
+* Large sequential file access
+* **Mostly superseded by RAID 5**
+
+---
+
+### RAID 4 – Block-level Striping with Parity
+
+**Configuration:** Minimum 3 disks
+
+**How it works:**
+
+* Data striped at block level
+* Single dedicated parity disk
+* Can survive single disk failure
+
+![RAID 4](https://user-images.githubusercontent.com/11299574/128065388-d0e2b2d4-f525-4b4d-a938-4e36894cd9b7.png)
+
+**Characteristics:**
+
+* ✅ Better random reads than RAID 3
+* ✅ Efficient capacity use
+* ❌ Parity disk write bottleneck
+* ❌ **Rarely used** (RAID 5 distributes parity)
+
+**Use cases:**
+
+* **Largely obsolete**
+* RAID 5 is superior in almost all cases
+
+---
+
+### RAID 5 – Striping with Distributed Parity
+
+**Configuration:** Minimum 3 disks
+
+**How it works:**
+
+* Data and parity striped across all disks
+* Parity distributed (no single parity disk)
+* Can survive single disk failure
+
+![RAID 5](https://user-images.githubusercontent.com/11299574/128065411-66e22a6c-3bf2-46b6-8deb-6d6094ae1a97.png)
+
+**Example with 3 disks:**
+
+```
+Disk 1: [A1, A2, P3]
+Disk 2: [B1, P2, B3]
+Disk 3: [P1, C2, C3]
+```
+
+**Characteristics:**
+
+* ✅ Good balance of performance, capacity, reliability
+* ✅ Better write performance than RAID 4
+* ✅ Efficient capacity use (n-1 disks usable)
+* ✅ Can survive single disk failure
+* ❌ Slow rebuild times (parity recalculation)
+* ❌ Vulnerable during rebuild
+* ❌ Write penalty (read-modify-write for parity)
+
+**Use cases:**
+
+* **Most popular RAID level**
+* General-purpose file servers
+* Application servers
+* Database servers (with moderate write load)
+
+**Capacity:** (N-1) × Disk Size (3 x 1TB = 2TB usable)
+
+**Performance:**
+
+* Reads: Good (parallel)
+* Writes: Moderate (parity overhead)
+
+---
+
+### RAID 6 – Striping with Double Parity
+
+**Configuration:** Minimum 4 disks
+
+**How it works:**
+
+* Like RAID 5, but with two parity blocks
+* Can survive **two simultaneous disk failures**
+* Distributed across all disks
+
+![RAID 6](https://user-images.githubusercontent.com/11299574/128065429-bce5dd8d-2557-4736-9220-18e76311c4d2.png)
+
+**Characteristics:**
+
+* ✅ Survives 2 disk failures
+* ✅ Safer during rebuilds
+* ✅ Better for large arrays (more disks = higher failure probability)
+* ❌ Slower writes (double parity calculation)
+* ❌ More complex controller
+* ❌ Lower usable capacity than RAID 5
+
+**Use cases:**
+
+* **Critical data** with high availability requirements
+* Large disk arrays (>6 disks)
+* Environments where rebuild time is long
+* When double redundancy required
+
+**Capacity:** (N-2) × Disk Size (4 x 1TB = 2TB usable)
+
+---
+
+### RAID 10 (1+0) – Mirroring + Striping
+
+**Configuration:** Minimum 4 disks (even number required)
+
+**How it works:**
+
+1. Create RAID 1 mirrors (pairs of disks)
+2. Stripe across the mirrored sets (RAID 0)
+
+![RAID 10](https://user-images.githubusercontent.com/11299574/128065470-3659ccbe-e97a-42ed-aa86-3436ee488ac8.png)
+
+**Example with 4 disks:**
+
+```
+Mirror 1: Disk 1 ↔ Disk 2
+Mirror 2: Disk 3 ↔ Disk 4
+RAID 0 across Mirror 1 and Mirror 2
+```
+
+**Characteristics:**
+
+* ✅ **Excellent performance** (reads and writes)
+* ✅ High fault tolerance (can survive multiple failures if in different mirrors)
+* ✅ Fast rebuild (just copy from mirror)
+* ✅ No parity overhead
+* ❌ 50% capacity loss
+* ❌ Expensive (requires many disks)
+
+**Use cases:**
+
+* **High-performance databases**
+* I/O intensive applications
+* When both performance and reliability critical
+* Enterprise applications
+
+**Capacity:** 50% of total (4 x 1TB = 2TB usable)
+
+**Performance:**
+
+* Reads: Excellent
+* Writes: Excellent
+
+---
+
+## RAID Comparison Table
+
+| RAID Level | Min Disks | Usable Capacity | Fault Tolerance | Read Perf | Write Perf | Use Case |
+|-----------|-----------|-----------------|-----------------|-----------|------------|----------|
+| **RAID 0** | 2 | 100% | None | Excellent | Excellent | Temp data, performance |
+| **RAID 1** | 2 | 50% | 1 disk | Good | Moderate | OS drives, small critical |
+| **RAID 5** | 3 | (N-1)/N | 1 disk | Good | Moderate | General purpose |
+| **RAID 6** | 4 | (N-2)/N | 2 disks | Good | Moderate | Large arrays, critical |
+| **RAID 10** | 4 | 50% | Multiple* | Excellent | Excellent | Databases, high perf |
+
+*Can survive multiple disk failures if they're in different mirror sets
+
+## Hardware vs Software RAID
+
+### Hardware RAID
+
+**Dedicated RAID controller card**
+
+**Pros:**
+
+* Better performance (dedicated processor)
+* Battery-backed cache
+* No CPU overhead on host
+* Often hot-swappable
+
+**Cons:**
+
+* Expensive
+* Controller failure = need identical controller
+* Vendor lock-in
+
+### Software RAID
+
+**Operating system manages RAID**
+
+**Pros:**
+
+* No additional hardware cost
+* Flexible configuration
+* No vendor lock-in
+* Easy to migrate
+
+**Cons:**
+
+* CPU overhead
+* Potentially lower performance
+* OS-dependent
+
+**Popular software RAID:**
+
+* Linux: mdadm
+* Windows: Storage Spaces
+* ZFS (Solaris, FreeBSD, Linux)
+
+## Best Practices
+
+### 1. Choose RAID Level Based on Needs
+
+* **Performance priority:** RAID 0, RAID 10
+* **Cost + reliability:** RAID 5
+* **Maximum reliability:** RAID 6, RAID 10
+* **Small critical data:** RAID 1
+
+### 2. Use Enterprise-Grade Disks
+
+* Higher MTBF (Mean Time Between Failures)
+* Better error handling
+* Worth the investment for production
+
+### 3. Monitor Disk Health
+
+* SMART monitoring
+* Proactive disk replacement
+* Alert on disk errors
+
+### 4. Regular Backups
+
+* **RAID is NOT a backup!**
+* Protects against disk failure, not:
+  * Accidental deletion
+  * Ransomware
+  * Data corruption
+  * Natural disasters
+
+### 5. Hot Spares
+
+* Keep spare disk(s) in array
+* Automatic rebuild on failure
+* Reduces downtime
+
+### 6. Plan for Rebuild Time
+
+* Large disks = long rebuild (hours to days)
+* System vulnerable during rebuild
+* Consider RAID 6 for large arrays
+
+## Summary
+
+Storage design involves choosing the right technology for your needs:
+
+* **Object storage** for scalable, unstructured data
+* **RAID** for redundancy and performance at the disk level
+
+**Key takeaways:**
+
+* RAID 0: Performance, no reliability
+* RAID 1: Simple mirroring
+* RAID 5: Best general-purpose choice
+* RAID 6: Extra safety for large arrays
+* RAID 10: Performance + reliability (expensive)
+* **RAID ≠ Backup**
+
+Choose based on your performance, capacity, and reliability requirements.

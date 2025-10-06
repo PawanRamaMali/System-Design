@@ -1,0 +1,354 @@
+# Load Balancing
+
+## What is Load Balancing?
+
+A **load balancer** is a component that distributes incoming network traffic across multiple servers or databases. It acts as a traffic director, ensuring no single server bears too much load while maximizing speed and capacity utilization.
+
+## Why Load Balancing?
+
+Without load balancing:
+
+* Single server becomes overwhelmed
+* Poor performance during traffic spikes
+* Single point of failure
+* Difficult to scale
+
+With load balancing:
+
+* Improved availability and reliability
+* Better resource utilization
+* Horizontal scalability
+* Reduced response time
+* Easier maintenance (zero-downtime deployments)
+
+## Types of Load Balancers
+
+### Hardware Load Balancers
+
+**Characteristics:**
+
+* Dedicated physical devices (F5, Citrix NetScaler)
+* High performance and throughput
+* Advanced features (SSL offloading, DDoS protection)
+* Expensive
+* Vendor lock-in
+
+**When to use:**
+
+* Large enterprise environments
+* Very high traffic volumes
+* Strict performance requirements
+* Budget allows for premium solutions
+
+### Software Load Balancers
+
+**Characteristics:**
+
+* Run on commodity hardware or virtual machines
+* Cost-effective
+* Flexible and customizable
+* Open-source options (NGINX, HAProxy)
+* Cloud-native (AWS ELB, Azure Load Balancer)
+
+**When to use:**
+
+* Cloud deployments
+* Budget constraints
+* Need for flexibility
+* Modern microservices architectures
+
+## Load Balancer Configurations
+
+### Active-Active Configuration
+
+**Multiple load balancers actively serving traffic simultaneously**
+
+* All load balancers handle requests
+* Better resource utilization
+* Higher throughput
+* DNS round-robin or anycast routing
+
+![Active-Active Load Balancing](https://user-images.githubusercontent.com/11299574/128064814-0046e8fb-950f-4930-a6c3-b056e241f0f6.png)
+
+### Active-Passive Configuration
+
+**One load balancer active, others on standby**
+
+* Primary handles all traffic
+* Secondary takes over on primary failure
+* Simpler to manage
+* Some capacity sits idle
+
+![Active-Passive Load Balancing](https://user-images.githubusercontent.com/11299574/128064842-84353ee3-f75f-468e-adaf-811e9b0aed5f.png)
+
+## Load Balancing Algorithms
+
+Choosing the right algorithm depends on your application's characteristics and requirements.
+
+### 1. Round Robin
+
+**How it works:** Requests are distributed sequentially across servers in rotation.
+
+```
+Request 1 → Server A
+Request 2 → Server B
+Request 3 → Server C
+Request 4 → Server A (cycle repeats)
+```
+
+**Pros:**
+
+* Simple to implement
+* Fair distribution
+* No state required
+
+**Cons:**
+
+* Doesn't consider server capacity
+* Ignores current load
+* Not ideal for long-lived connections
+
+**When to use:**
+
+* Servers have similar capacity
+* Requests have similar processing time
+* Stateless applications
+
+### 2. Least Connections
+
+**How it works:** Routes traffic to the server with the fewest active connections.
+
+**Pros:**
+
+* Better for long-lived connections
+* Considers current server load
+* More balanced than round robin
+
+**Cons:**
+
+* Requires tracking connection state
+* More complex than round robin
+
+**When to use:**
+
+* Long-lived connections (WebSockets, database connections)
+* Variable request processing time
+* Server capacities differ
+
+### 3. Least Response Time (Least Loaded)
+
+**How it works:** Routes to the server with the fastest response time and fewest active connections.
+
+**Pros:**
+
+* Optimizes for performance
+* Adapts to server performance
+* Accounts for backend processing time
+
+**Cons:**
+
+* Most complex to implement
+* Requires health monitoring
+* Higher overhead
+
+**When to use:**
+
+* Performance-critical applications
+* Varying backend processing times
+* Heterogeneous server pool
+
+### 4. IP Hash (Session-Based)
+
+**How it works:** Client IP address is hashed to determine which server receives the request.
+
+```
+hash(client_ip) % server_count = server_index
+```
+
+**Pros:**
+
+* Session persistence (sticky sessions)
+* No session store required
+* Predictable routing
+
+**Cons:**
+
+* Uneven distribution if traffic concentrated from few IPs
+* Breaks on server addition/removal
+* Not suitable for clients behind NAT
+
+**When to use:**
+
+* Applications requiring session affinity
+* Stateful applications
+* When consistent hashing can't be used
+
+### 5. Weighted Round Robin
+
+**How it works:** Like round robin, but servers are assigned weights based on capacity.
+
+```
+Server A (weight=3): Receives 3 requests
+Server B (weight=2): Receives 2 requests
+Server C (weight=1): Receives 1 request
+```
+
+**When to use:**
+
+* Heterogeneous server capacities
+* Gradual rollout (blue-green deployment)
+* Testing new server versions
+
+### 6. Random
+
+**How it works:** Randomly selects a server for each request.
+
+**Pros:**
+
+* Simple
+* No state required
+* Surprisingly effective at scale
+
+**Cons:**
+
+* Can be uneven in short term
+* No optimization
+
+**When to use:**
+
+* Very simple use cases
+* As a fallback method
+
+## Layer 4 vs Layer 7 Load Balancing
+
+### Layer 4 (Transport Layer)
+
+**Routes based on:** IP address and TCP/UDP port
+
+**Characteristics:**
+
+* Fast and efficient
+* Lower latency
+* No content inspection
+* Cannot make routing decisions based on content
+
+**Example:**
+
+```
+Client → Load Balancer (checks IP:Port) → Backend Server
+```
+
+### Layer 7 (Application Layer)
+
+**Routes based on:** HTTP headers, URL path, cookies, request content
+
+**Characteristics:**
+
+* Content-aware routing
+* URL-based routing
+* Header-based routing
+* SSL termination
+* Higher latency (content inspection)
+
+**Example:**
+
+```
+/api/* → API Servers
+/images/* → Image Servers
+/static/* → CDN
+```
+
+## Load Balancer Architecture
+
+![Load Balancer Architecture](https://user-images.githubusercontent.com/11299574/128064760-3cb9473c-93d0-45e6-9b9d-a5de447d4911.png)
+
+**Typical flow:**
+
+1. Client sends request to load balancer
+2. Load balancer selects backend server using algorithm
+3. Load balancer forwards request to chosen server
+4. Server processes request
+5. Response flows back through load balancer to client
+
+## Health Checks
+
+Load balancers continuously monitor backend server health:
+
+**Types of health checks:**
+
+* **Passive:** Monitor actual request failures
+* **Active:** Periodic health check requests
+
+**Health check methods:**
+
+* HTTP endpoint (e.g., `/health`)
+* TCP connection test
+* Custom scripts
+
+**Configuration example:**
+
+```yaml
+health_check:
+  interval: 10s
+  timeout: 5s
+  healthy_threshold: 2
+  unhealthy_threshold: 3
+  endpoint: /health
+```
+
+## Best Practices
+
+### 1. Multiple Load Balancers
+
+Never use a single load balancer (single point of failure). Deploy at least two in active-active or active-passive mode.
+
+### 2. Health Monitoring
+
+* Implement comprehensive health checks
+* Monitor both infrastructure and application health
+* Automatic removal of unhealthy backends
+
+### 3. SSL/TLS Termination
+
+* Terminate SSL at load balancer to reduce backend load
+* Use backend encryption for sensitive data
+* Manage certificates centrally
+
+### 4. Connection Draining
+
+* Gracefully remove servers from rotation
+* Allow existing connections to complete
+* Prevent new connections to draining server
+
+### 5. Logging and Monitoring
+
+* Access logs for debugging
+* Performance metrics (latency, throughput)
+* Error rates per backend
+* Connection pooling statistics
+
+## Common Load Balancers
+
+**Open Source:**
+
+* **NGINX:** High-performance, Layer 7
+* **HAProxy:** Reliable, Layer 4 and Layer 7
+* **Traefik:** Cloud-native, microservices-focused
+
+**Cloud Providers:**
+
+* **AWS:** Application Load Balancer (ALB), Network Load Balancer (NLB)
+* **Azure:** Azure Load Balancer, Application Gateway
+* **GCP:** Cloud Load Balancing
+
+## Summary
+
+Load balancing is essential for building scalable, highly available systems. The choice of load balancing algorithm and configuration depends on your specific application requirements, traffic patterns, and infrastructure.
+
+Key takeaways:
+
+* Use multiple load balancers (no single point of failure)
+* Choose algorithm based on application characteristics
+* Implement comprehensive health checks
+* Monitor performance and adjust configuration
+* Plan for horizontal scaling from the start

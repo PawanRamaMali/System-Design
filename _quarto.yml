@@ -1,0 +1,75 @@
+project:
+  type: book
+  output-dir: docs
+
+book:
+  title: "Foundations of System Design"
+  subtitle: "A Comprehensive Guide for Building Scalable and Resilient Web Applications"
+  author: "Your Name"
+  date: today
+  date-format: "MMMM YYYY"
+
+  chapters:
+    - index.qmd
+    - part: "Part I: Introduction & Core Concepts"
+      chapters:
+        - chapters/ch01-introduction.qmd
+        - chapters/ch02-distributed-systems.qmd
+
+    - part: "Part II: Scalability & Performance"
+      chapters:
+        - chapters/ch03-scaling.qmd
+        - chapters/ch04-load-balancing.qmd
+        - chapters/ch05-caching.qmd
+        - chapters/ch06-consistent-hashing.qmd
+
+    - part: "Part III: Data & Storage"
+      chapters:
+        - chapters/ch07-storage-raid.qmd
+        - chapters/ch08-databases.qmd
+
+    - part: "Part IV: Architecture & Communication"
+      chapters:
+        - chapters/ch09-servers-architecture.qmd
+        - chapters/ch10-messaging-communication.qmd
+
+    - part: "Part V: Advanced Topics"
+      chapters:
+        - chapters/ch11-security-cdn.qmd
+        - chapters/ch12-capacity-estimation.qmd
+        - chapters/ch13-solid-principles.qmd
+
+  page-footer:
+    left: "Copyright 2024"
+    right: "Built with [Quarto](https://quarto.org/)"
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      light: [cosmo, theme-light.scss]
+      dark: [cosmo, theme-dark.scss]
+    code-copy: true
+    code-overflow: wrap
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    number-depth: 3
+    link-external-newwindow: true
+
+  pdf:
+    documentclass: scrbook
+    papersize: letter
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    number-depth: 3
+    colorlinks: true
+
+  epub:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+
+editor: visual

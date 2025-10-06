@@ -1,0 +1,640 @@
+# SOLID Principles in System Design
+
+## Introduction to SOLID
+
+**SOLID** is a set of five design principles intended to make software designs more understandable, flexible, and maintainable. These principles were theorized by **Robert C. Martin** (famously known as **Uncle Bob**) in his paper published in the year 2000.
+
+While SOLID principles are often taught in the context of object-oriented programming, they apply equally well to system design and architecture.
+
+## The SOLID Acronym
+
+* **S** - Single Responsibility Principle (SRP)
+* **O** - Open/Closed Principle (OCP)
+* **L** - Liskov Substitution Principle (LSP)
+* **I** - Interface Segregation Principle (ISP)
+* **D** - Dependency Inversion Principle (DIP)
+
+## 1. Single Responsibility Principle (SRP)
+
+> "Every software component should have one and only one responsibility."
+>
+> "Every software component should have one and only one reason to change."
+
+### Key Concepts
+
+#### Cohesion
+
+**Definition:** The degree to which elements inside a module belong together.
+
+* **High cohesion:** Elements are closely related, work toward single purpose
+* **Low cohesion:** Elements unrelated, multiple purposes
+
+**Example:**
+
+```
+High Cohesion:
+UserAuthenticationService → login(), logout(), validateToken()
+(All methods related to authentication)
+
+Low Cohesion:
+UserService → login(), sendEmail(), calculateTax(), generateReport()
+(Methods unrelated, doing too many things)
+```
+
+#### Coupling
+
+**Definition:** The degree of interdependence between software modules.
+
+* **Loose coupling:** Modules independent, minimal dependencies
+* **Tight coupling:** Modules heavily dependent on each other
+
+**Goal:** High cohesion, loose coupling
+
+### SRP at Different Levels
+
+#### 1. Method Level
+
+Each method should do one thing.
+
+**Bad:**
+
+```javascript
+function processUser(user) {
+    // Validate
+    if (!user.email) throw new Error('Invalid email');
+
+    // Transform
+    user.email = user.email.toLowerCase();
+
+    // Save to database
+    db.users.insert(user);
+
+    // Send email
+    sendWelcomeEmail(user.email);
+
+    // Log
+    logger.info('User created');
+}
+```
+
+**Good:**
+
+```javascript
+function validateUser(user) {
+    if (!user.email) throw new Error('Invalid email');
+}
+
+function normalizeUser(user) {
+    return { ...user, email: user.email.toLowerCase() };
+}
+
+function saveUser(user) {
+    return db.users.insert(user);
+}
+
+function notifyUser(user) {
+    sendWelcomeEmail(user.email);
+}
+
+// Orchestrate
+function processUser(user) {
+    validateUser(user);
+    const normalizedUser = normalizeUser(user);
+    const savedUser = saveUser(normalizedUser);
+    notifyUser(savedUser);
+    return savedUser;
+}
+```
+
+#### 2. Class Level
+
+Each class should have one responsibility.
+
+**Bad (Violates SRP):**
+
+```javascript
+class UserRegistrationService {
+    registerUser(username, emailId) {
+        // Create SQL connection
+        const connection = mysql.createConnection(config);
+
+        // Insert user into database
+        connection.query(
+            'INSERT INTO users (username, email) VALUES (?, ?)',
+            [username, emailId]
+        );
+
+        // Close connection
+        connection.end();
+
+        // Send welcome email
+        const transporter = nodemailer.createTransporter(emailConfig);
+        transporter.sendMail({
+            to: emailId,
+            subject: 'Welcome!',
+            text: `Welcome ${username}!`
+        });
+    }
+}
+```
+
+**Reasons to change:**
+
+1. Database connection logic changes
+2. Database schema changes
+3. Email provider changes
+4. Email template changes
+
+**Good (Follows SRP):**
+
+```javascript
+class DatabaseService {
+    createConnection() { /* ... */ }
+    insert(table, data) { /* ... */ }
+    closeConnection() { /* ... */ }
+}
+
+class EmailService {
+    sendEmail(to, subject, body) { /* ... */ }
+}
+
+class UserRegistrationService {
+    constructor(databaseService, emailService) {
+        this.db = databaseService;
+        this.email = emailService;
+    }
+
+    registerUser(username, emailId) {
+        // Single responsibility: coordinate user registration
+        this.db.insert('users', { username, email: emailId });
+        this.email.sendEmail(
+            emailId,
+            'Welcome!',
+            `Welcome ${username}!`
+        );
+    }
+}
+```
+
+**Reasons to change:** Only if registration workflow changes.
+
+#### 3. Package/Module Level
+
+Group related functionality together.
+
+```
+authentication/
+  ├── login.js
+  ├── logout.js
+  ├── tokenValidation.js
+  └── passwordReset.js
+
+email/
+  ├── emailSender.js
+  ├── templates.js
+  └── emailQueue.js
+
+database/
+  ├── connection.js
+  ├── userRepository.js
+  └── orderRepository.js
+```
+
+#### 4. System Design Level
+
+Each service should have one responsibility.
+
+**Microservices Example:**
+
+```
+❌ Bad: Monolithic UserService
+- Authentication
+- Profile management
+- Notifications
+- Analytics
+- Payment processing
+
+✅ Good: Separate services
+- AuthenticationService
+- UserProfileService
+- NotificationService
+- AnalyticsService
+- PaymentService
+```
+
+### Benefits of SRP
+
+1. **Easy to change behavior:** Modifications localized
+2. **Easier debugging:** Narrow down issues quickly
+3. **Easy to understand:** Clear, focused components
+4. **Easy to test:** Single responsibility = simple tests
+5. **Less maintenance:** Changes don't ripple across system
+
+### Real-World Example: E-commerce Order
+
+**Bad Design:**
+
+```javascript
+class OrderService {
+    processOrder(order) {
+        // Validate inventory
+        // Process payment
+        // Update inventory
+        // Send confirmation email
+        // Update analytics
+        // Generate invoice
+        // Notify warehouse
+    }
+}
+```
+
+**Good Design:**
+
+```javascript
+class OrderService {
+    constructor(inventory, payment, email, analytics, invoice, warehouse) {
+        this.inventory = inventory;
+        this.payment = payment;
+        this.email = email;
+        this.analytics = analytics;
+        this.invoice = invoice;
+        this.warehouse = warehouse;
+    }
+
+    async processOrder(order) {
+        await this.inventory.reserve(order.items);
+        await this.payment.charge(order.total);
+        await this.inventory.commit(order.items);
+        await this.email.sendConfirmation(order);
+        await this.analytics.trackOrder(order);
+        await this.invoice.generate(order);
+        await this.warehouse.notify(order);
+    }
+}
+
+// Each dependency has single responsibility
+class InventoryService { reserve(), commit() }
+class PaymentService { charge() }
+class EmailService { sendConfirmation() }
+class AnalyticsService { trackOrder() }
+class InvoiceService { generate() }
+class WarehouseService { notify() }
+```
+
+---
+
+## 2. Open/Closed Principle (OCP)
+
+> "Software entities (classes, modules, functions) should be open for extension, but closed for modification."
+
+### What Does It Mean?
+
+* **Open for extension:** Can add new functionality
+* **Closed for modification:** Don't change existing code
+
+**Why?** Modifying existing code risks breaking working features.
+
+### OCP Through Polymorphism
+
+Polymorphism enables OCP by allowing different implementations of the same interface.
+
+#### Method Overloading (Compile-time Polymorphism)
+
+```javascript
+// JavaScript doesn't have true overloading, but concept:
+function add(a, b) { return a + b; }
+function add(a, b, c) { return a + b + c; }
+
+// In Java/C#:
+void add(int a, int b) { }
+void add(int a, int b, int c) { }
+```
+
+#### Method Overriding (Runtime Polymorphism)
+
+```javascript
+class Operation {
+    perform() {
+        throw new Error('Must implement perform()');
+    }
+}
+
+class Addition extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    perform() {
+        this.result = this.a + this.b;
+    }
+}
+
+class Subtraction extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    perform() {
+        this.result = this.a - this.b;
+    }
+}
+```
+
+### Example: Calculator (Bad Design)
+
+**Violates OCP:**
+
+```javascript
+class Operation {}
+
+class Addition extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    getA() { return this.a; }
+    getB() { return this.b; }
+    setResult(result) { this.result = result; }
+}
+
+class Subtraction extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    getA() { return this.a; }
+    getB() { return this.b; }
+    setResult(result) { this.result = result; }
+}
+
+class Calculator {
+    calculate(operation) {
+        if (operation instanceof Addition) {
+            const add = operation;
+            add.setResult(add.getA() + add.getB());
+        } else if (operation instanceof Subtraction) {
+            const sub = operation;
+            sub.setResult(sub.getA() - sub.getB());
+        }
+        // ❌ To add Multiplication, must MODIFY Calculator class!
+    }
+}
+```
+
+**Problem:** Adding new operation requires modifying `Calculator` class.
+
+### Example: Calculator (Good Design)
+
+**Follows OCP:**
+
+```javascript
+class Operation {
+    perform() {
+        throw new Error('Must implement perform()');
+    }
+}
+
+class Addition extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    perform() {
+        this.result = this.a + this.b;
+    }
+
+    getResult() {
+        return this.result;
+    }
+}
+
+class Subtraction extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    perform() {
+        this.result = this.a - this.b;
+    }
+
+    getResult() {
+        return this.result;
+    }
+}
+
+class Multiplication extends Operation {
+    constructor(a, b) {
+        super();
+        this.a = a;
+        this.b = b;
+        this.result = 0;
+    }
+
+    perform() {
+        this.result = this.a * this.b;
+    }
+
+    getResult() {
+        return this.result;
+    }
+}
+
+class Calculator {
+    calculate(operation) {
+        // ✅ No modification needed for new operations!
+        operation.perform();
+    }
+}
+
+// Usage
+const calc = new Calculator();
+const add = new Addition(5, 3);
+calc.calculate(add);
+console.log(add.getResult()); // 8
+
+const mult = new Multiplication(5, 3);
+calc.calculate(mult);
+console.log(mult.getResult()); // 15
+```
+
+**Benefit:** Adding `Multiplication` doesn't change `Calculator` class!
+
+### OCP in System Design
+
+#### Plugin Architecture
+
+```javascript
+class NotificationSystem {
+    constructor() {
+        this.plugins = [];
+    }
+
+    registerPlugin(plugin) {
+        this.plugins.push(plugin);
+    }
+
+    notify(message) {
+        this.plugins.forEach(plugin => plugin.send(message));
+    }
+}
+
+// Base plugin interface
+class NotificationPlugin {
+    send(message) {
+        throw new Error('Must implement send()');
+    }
+}
+
+// Concrete plugins (extensions)
+class EmailPlugin extends NotificationPlugin {
+    send(message) {
+        console.log(`Email: ${message}`);
+    }
+}
+
+class SMSPlugin extends NotificationPlugin {
+    send(message) {
+        console.log(`SMS: ${message}`);
+    }
+}
+
+class SlackPlugin extends NotificationPlugin {
+    send(message) {
+        console.log(`Slack: ${message}`);
+    }
+}
+
+// Usage
+const notifier = new NotificationSystem();
+notifier.registerPlugin(new EmailPlugin());
+notifier.registerPlugin(new SMSPlugin());
+notifier.registerPlugin(new SlackPlugin()); // ✅ Extended without modifying NotificationSystem
+
+notifier.notify('Hello World');
+```
+
+#### Strategy Pattern
+
+```javascript
+// Payment processing with different strategies
+class PaymentProcessor {
+    constructor(strategy) {
+        this.strategy = strategy;
+    }
+
+    process(amount) {
+        return this.strategy.pay(amount);
+    }
+}
+
+class PaymentStrategy {
+    pay(amount) {
+        throw new Error('Must implement pay()');
+    }
+}
+
+class CreditCardStrategy extends PaymentStrategy {
+    pay(amount) {
+        console.log(`Paid $${amount} with credit card`);
+    }
+}
+
+class PayPalStrategy extends PaymentStrategy {
+    pay(amount) {
+        console.log(`Paid $${amount} with PayPal`);
+    }
+}
+
+class CryptoStrategy extends PaymentStrategy {
+    pay(amount) {
+        console.log(`Paid $${amount} with cryptocurrency`);
+    }
+}
+
+// Usage
+const processor = new PaymentProcessor(new CreditCardStrategy());
+processor.process(100);
+
+// Switch strategy without modifying PaymentProcessor
+processor.strategy = new CryptoStrategy();
+processor.process(50);
+```
+
+### Benefits of OCP
+
+**Advantages:**
+
+* Existing features remain untouched (less risk)
+* New features added easily
+* Promotes code reuse
+* Better testability
+
+**When clients are using existing classes, modifying them risks introducing bugs. Creating new classes preserves existing functionality.**
+
+---
+
+## Summary
+
+### Single Responsibility Principle (SRP)
+
+* One responsibility per component
+* High cohesion, loose coupling
+* Easier to maintain, test, understand
+
+**Example:** Separate `DatabaseService`, `EmailService`, and `UserService`
+
+### Open/Closed Principle (OCP)
+
+* Open for extension, closed for modification
+* Use polymorphism and abstraction
+* Add new features without changing existing code
+
+**Example:** Calculator with pluggable operations
+
+### Application in System Design
+
+**Microservices:**
+
+* Each service = single responsibility (SRP)
+* New services added without modifying existing ones (OCP)
+
+**Event-Driven Architecture:**
+
+* New event handlers added without modifying publishers (OCP)
+* Each handler has single responsibility (SRP)
+
+**API Design:**
+
+* Versioning allows extension without breaking existing clients (OCP)
+* Each endpoint has focused purpose (SRP)
+
+### Key Takeaways
+
+1. **SRP:** Keep components focused
+2. **OCP:** Design for extensibility
+3. **Both:** Lead to maintainable, scalable systems
+4. **In practice:** Often go hand-in-hand
+
+Following SOLID principles, especially SRP and OCP, results in systems that are easier to understand, maintain, extend, and scale.
+
+---
+
+**Note:** The remaining SOLID principles (Liskov Substitution, Interface Segregation, Dependency Inversion) are more specific to object-oriented programming and less directly applicable to high-level system design. However, understanding SRP and OCP provides a strong foundation for designing scalable distributed systems.
