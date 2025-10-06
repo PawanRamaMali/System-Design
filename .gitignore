@@ -1,7 +1,7 @@
 # Quarto
 /.quarto/
 /_site/
-/docs/
+# /docs/ - Don't ignore docs, it's needed for GitHub Pages
 *.html
 !index.html
 
