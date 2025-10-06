@@ -58,18 +58,4 @@ format:
     number-depth: 3
     link-external-newwindow: true
 
-  pdf:
-    documentclass: scrbook
-    papersize: letter
-    toc: true
-    toc-depth: 3
-    number-sections: true
-    number-depth: 3
-    colorlinks: true
-
-  epub:
-    toc: true
-    toc-depth: 3
-    number-sections: true
-
 editor: visual
