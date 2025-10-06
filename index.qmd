@@ -50,3 +50,5 @@ Complete references are provided at the end of each chapter and in the bibliogra
 ---
 
 Let's begin our journey into the foundations of system design!
+
+> "Good design adds value faster than it adds cost." — Thomas C. Gale
