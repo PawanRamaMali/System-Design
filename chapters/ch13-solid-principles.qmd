@@ -2,7 +2,7 @@
 
 ## Introduction to SOLID
 
-**SOLID** is a set of five design principles intended to make software designs more understandable, flexible, and maintainable. These principles were theorized by **Robert C. Martin** (famously known as **Uncle Bob**) in his paper published in the year 2000.
+**SOLID** is a set of five design principles intended to make software designs more understandable, flexible, and maintainable. These principles were theorized by **Robert C. Martin** (famously known as **Uncle Bob**) in his paper published in the year 2000 [@martin2000design]. Martin further expanded on these concepts in his book *Clean Architecture* [@martin2017clean].
 
 While SOLID principles are often taught in the context of object-oriented programming, they apply equally well to system design and architecture.
 

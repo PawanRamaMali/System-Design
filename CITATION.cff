@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this book in your research or teaching, please cite it as below."
+type: book
+title: "Foundations of System Design: A Comprehensive Guide for Building Scalable and Resilient Web Applications"
+authors:
+  - family-names: Mali
+    given-names: Pawan Rama
+    orcid: https://orcid.org/0000-0001-7864-5819
+date-released: 2024-10-06
+url: "https://github.com/PawanRamaMali/System-Design"
+repository-code: "https://github.com/PawanRamaMali/System-Design"
+keywords:
+  - system design
+  - distributed systems
+  - scalability
+  - software architecture
+  - microservices
+  - database design
+  - caching
+  - load balancing
+license: MIT
+abstract: >
+  A comprehensive guide to designing scalable and resilient web applications.
+  This book covers fundamental concepts of distributed systems, architectural
+  patterns, scalability strategies, database design, caching, security, and
+  system design best practices. Topics include CAP theorem, SOLID principles,
+  load balancing, consistent hashing, message queues, and capacity estimation.

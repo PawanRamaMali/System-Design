@@ -5,7 +5,10 @@ project:
 book:
   title: "Foundations of System Design"
   subtitle: "A Comprehensive Guide for Building Scalable and Resilient Web Applications"
-  author: "Your Name"
+  author:
+    - name: "Pawan Rama Mali"
+      orcid: 0000-0001-7864-5819
+      url: https://orcid.org/0000-0001-7864-5819
   date: today
   date-format: "MMMM YYYY"
 
@@ -38,6 +41,8 @@ book:
         - chapters/ch11-security-cdn.qmd
         - chapters/ch12-capacity-estimation.qmd
         - chapters/ch13-solid-principles.qmd
+
+    - chapters/references.qmd
 
   page-footer:
     left: "Copyright 2024"

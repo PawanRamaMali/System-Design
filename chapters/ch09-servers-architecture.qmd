@@ -325,7 +325,7 @@ class UserRepository {
 
 ![Microservices Architecture](https://user-images.githubusercontent.com/11299574/128063274-3bfc9b7b-a4a2-43f0-a7e8-3a1a97a337a0.png)
 
-**Definition:** Application built as collection of small, independent services, each running in its own process.
+**Definition:** Application built as collection of small, independent services, each running in its own process [@newman2021building; @richardson2018microservices].
 
 **Key Principles:**
 

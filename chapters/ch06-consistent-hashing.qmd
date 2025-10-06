@@ -2,7 +2,7 @@
 
 ## What is Consistent Hashing?
 
-**Consistent hashing** is a distributed hashing technique that minimizes the number of keys that need to be remapped when the hash table is resized. It's essential for building scalable distributed systems.
+**Consistent hashing** is a distributed hashing technique that minimizes the number of keys that need to be remapped when the hash table is resized [@karger1997consistent]. It's essential for building scalable distributed systems and is widely used in distributed caching protocols to relieve hot spots on distributed networks.
 
 ## The Problem with Traditional Hashing
 

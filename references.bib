@@ -1,38 +1,282 @@
-@book{designing-data-intensive,
-  title={Designing Data-Intensive Applications},
-  author={Martin Kleppmann},
+% Books
+@book{kleppmann2017designing,
+  title={Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems},
+  author={Kleppmann, Martin},
   year={2017},
-  publisher={O'Reilly Media}
+  publisher={O'Reilly Media},
+  isbn={978-1449373320},
+  url={https://dataintensive.net/}
 }
 
-@book{system-design-interview,
-  title={System Design Interview},
-  author={Alex Xu},
+@book{xu2020system,
+  title={System Design Interview: An Insider's Guide},
+  author={Xu, Alex},
   year={2020},
-  publisher={ByteByteGo}
+  publisher={ByteByteGo},
+  isbn={979-8664653403},
+  edition={1st}
 }
 
-@article{cap-theorem,
+@book{xu2022system,
+  title={System Design Interview: An Insider's Guide, Volume 2},
+  author={Xu, Alex},
+  year={2022},
+  publisher={ByteByteGo},
+  isbn={979-8985138703},
+  edition={2nd}
+}
+
+@book{newman2021building,
+  title={Building Microservices: Designing Fine-Grained Systems},
+  author={Newman, Sam},
+  year={2021},
+  publisher={O'Reilly Media},
+  edition={2nd},
+  isbn={978-1492034025}
+}
+
+@book{martin2017clean,
+  title={Clean Architecture: A Craftsman's Guide to Software Structure and Design},
+  author={Martin, Robert C.},
+  year={2017},
+  publisher={Prentice Hall},
+  isbn={978-0134494166},
+  series={Robert C. Martin Series}
+}
+
+@book{martin2000design,
+  title={Design Principles and Design Patterns},
+  author={Martin, Robert C.},
+  year={2000},
+  publisher={Object Mentor},
+  url={https://web.archive.org/web/20150906155800/http://www.objectmentor.com/resources/articles/Principles_and_Patterns.pdf}
+}
+
+@book{fowler2002patterns,
+  title={Patterns of Enterprise Application Architecture},
+  author={Fowler, Martin},
+  year={2002},
+  publisher={Addison-Wesley},
+  isbn={978-0321127420}
+}
+
+@book{richardson2018microservices,
+  title={Microservices Patterns: With Examples in Java},
+  author={Richardson, Chris},
+  year={2018},
+  publisher={Manning Publications},
+  isbn={978-1617294549}
+}
+
+@book{nygard2018release,
+  title={Release It!: Design and Deploy Production-Ready Software},
+  author={Nygard, Michael T.},
+  year={2018},
+  publisher={Pragmatic Bookshelf},
+  edition={2nd},
+  isbn={978-1680502398}
+}
+
+% Papers and Articles
+@article{gilbert2002cap,
   title={Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services},
   author={Gilbert, Seth and Lynch, Nancy},
   journal={ACM SIGACT News},
   volume={33},
   number={2},
   pages={51--59},
-  year={2002}
+  year={2002},
+  publisher={ACM},
+  doi={10.1145/564585.564601}
 }
 
-@book{building-microservices,
-  title={Building Microservices},
-  author={Sam Newman},
-  year={2021},
+@article{brewer2012cap,
+  title={CAP Twelve Years Later: How the "Rules" Have Changed},
+  author={Brewer, Eric},
+  journal={Computer},
+  volume={45},
+  number={2},
+  pages={23--29},
+  year={2012},
+  publisher={IEEE},
+  doi={10.1109/MC.2012.37}
+}
+
+@article{lamport1998part,
+  title={The Part-Time Parliament},
+  author={Lamport, Leslie},
+  journal={ACM Transactions on Computer Systems},
+  volume={16},
+  number={2},
+  pages={133--169},
+  year={1998},
+  publisher={ACM},
+  doi={10.1145/279227.279229},
+  note={Paxos consensus algorithm}
+}
+
+@article{vogels2009eventually,
+  title={Eventually Consistent},
+  author={Vogels, Werner},
+  journal={Communications of the ACM},
+  volume={52},
+  number={1},
+  pages={40--44},
+  year={2009},
+  publisher={ACM},
+  doi={10.1145/1435417.1435432}
+}
+
+@inproceedings{karger1997consistent,
+  title={Consistent Hashing and Random Trees: Distributed Caching Protocols for Relieving Hot Spots on the World Wide Web},
+  author={Karger, David and Lehman, Eric and Leighton, Tom and Panigrahy, Rina and Levine, Matthew and Lewin, Daniel},
+  booktitle={Proceedings of the Twenty-Ninth Annual ACM Symposium on Theory of Computing},
+  pages={654--663},
+  year={1997},
+  organization={ACM},
+  doi={10.1145/258533.258660}
+}
+
+@article{decandia2007dynamo,
+  title={Dynamo: Amazon's Highly Available Key-Value Store},
+  author={DeCandia, Giuseppe and Hastorun, Deniz and Jampani, Madan and Kakulapati, Gunavardhan and Lakshman, Avinash and Pilchin, Alex and Sivasubramanian, Swaminathan and Vosshall, Peter and Vogels, Werner},
+  journal={ACM SIGOPS Operating Systems Review},
+  volume={41},
+  number={6},
+  pages={205--220},
+  year={2007},
+  publisher={ACM},
+  doi={10.1145/1323293.1294281}
+}
+
+@article{chang2008bigtable,
+  title={Bigtable: A Distributed Storage System for Structured Data},
+  author={Chang, Fay and Dean, Jeffrey and Ghemawat, Sanjay and Hsieh, Wilson C. and Wallach, Deborah A. and Burrows, Mike and Chandra, Tushar and Fikes, Andrew and Gruber, Robert E.},
+  journal={ACM Transactions on Computer Systems},
+  volume={26},
+  number={2},
+  pages={1--26},
+  year={2008},
+  publisher={ACM},
+  doi={10.1145/1365815.1365816}
+}
+
+@article{lakshman2010cassandra,
+  title={Cassandra: A Decentralized Structured Storage System},
+  author={Lakshman, Avinash and Malik, Prashant},
+  journal={ACM SIGOPS Operating Systems Review},
+  volume={44},
+  number={2},
+  pages={35--40},
+  year={2010},
+  publisher={ACM},
+  doi={10.1145/1773912.1773922}
+}
+
+@inproceedings{dean2004mapreduce,
+  title={MapReduce: Simplified Data Processing on Large Clusters},
+  author={Dean, Jeffrey and Ghemawat, Sanjay},
+  booktitle={Proceedings of the 6th Conference on Symposium on Operating Systems Design \& Implementation},
+  volume={6},
+  pages={137--150},
+  year={2004},
+  organization={USENIX Association}
+}
+
+@article{corbett2013spanner,
+  title={Spanner: Google's Globally Distributed Database},
+  author={Corbett, James C. and Dean, Jeffrey and Epstein, Michael and Fikes, Andrew and Frost, Christopher and Furman, Jeffrey John and Ghemawat, Sanjay and Gubarev, Andrey and Heiser, Christopher and Hochschild, Peter and others},
+  journal={ACM Transactions on Computer Systems},
+  volume={31},
+  number={3},
+  pages={1--22},
+  year={2013},
+  publisher={ACM},
+  doi={10.1145/2491245}
+}
+
+% Web Resources and Technical Documentation
+@misc{nginx-docs,
+  title={NGINX Documentation},
+  author={{NGINX Inc.}},
+  year={2024},
+  url={https://nginx.org/en/docs/},
+  note={Accessed: 2024-10-06}
+}
+
+@misc{redis-docs,
+  title={Redis Documentation},
+  author={{Redis Ltd.}},
+  year={2024},
+  url={https://redis.io/documentation},
+  note={Accessed: 2024-10-06}
+}
+
+@misc{kafka-docs,
+  title={Apache Kafka Documentation},
+  author={{Apache Software Foundation}},
+  year={2024},
+  url={https://kafka.apache.org/documentation/},
+  note={Accessed: 2024-10-06}
+}
+
+@misc{aws-architecture,
+  title={AWS Well-Architected Framework},
+  author={{Amazon Web Services}},
+  year={2024},
+  url={https://aws.amazon.com/architecture/well-architected/},
+  note={Accessed: 2024-10-06}
+}
+
+@misc{google-sre,
+  title={Site Reliability Engineering: How Google Runs Production Systems},
+  author={Beyer, Betsy and Jones, Chris and Petoff, Jennifer and Murphy, Niall Richard},
+  year={2016},
   publisher={O'Reilly Media},
-  edition={2nd}
+  isbn={978-1491929124},
+  url={https://sre.google/books/}
 }
 
-@book{clean-architecture,
-  title={Clean Architecture: A Craftsman's Guide to Software Structure and Design},
-  author={Robert C. Martin},
-  year={2017},
-  publisher={Prentice Hall}
+@misc{microservices-io,
+  title={Microservices Patterns},
+  author={Richardson, Chris},
+  year={2024},
+  url={https://microservices.io/patterns/},
+  note={Accessed: 2024-10-06}
+}
+
+@misc{martin-fowler-blog,
+  title={Martin Fowler's Blog},
+  author={Fowler, Martin},
+  year={2024},
+  url={https://martinfowler.com/},
+  note={Accessed: 2024-10-06}
+}
+
+% Standards and RFCs
+@techreport{rfc7540,
+  title={Hypertext Transfer Protocol Version 2 (HTTP/2)},
+  author={Belshe, Mike and Peon, Roberto and Thomson, Martin},
+  year={2015},
+  institution={RFC 7540, RFC Editor},
+  type={RFC},
+  url={https://www.rfc-editor.org/rfc/rfc7540}
+}
+
+@techreport{rfc6455,
+  title={The WebSocket Protocol},
+  author={Fette, Ian and Melnikov, Alexey},
+  year={2011},
+  institution={RFC 6455, RFC Editor},
+  type={RFC},
+  url={https://www.rfc-editor.org/rfc/rfc6455}
+}
+
+@techreport{rfc7231,
+  title={Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content},
+  author={Fielding, Roy T. and Reschke, Julian},
+  year={2014},
+  institution={RFC 7231, RFC Editor},
+  type={RFC},
+  url={https://www.rfc-editor.org/rfc/rfc7231}
 }

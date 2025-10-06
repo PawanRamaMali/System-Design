@@ -29,7 +29,23 @@ The book is structured to take you from foundational concepts to advanced archit
 
 ## About the Author
 
-This book represents a collection of practical knowledge and best practices gathered from building and scaling web applications in production environments.
+**Pawan Rama Mali** is a technology professional with extensive experience in designing and building scalable distributed systems. This book represents a collection of practical knowledge and best practices gathered from building and scaling web applications in production environments.
+
+ORCID: [0000-0001-7864-5819](https://orcid.org/0000-0001-7864-5819)
+
+---
+
+## Acknowledgments
+
+This book draws upon foundational research, industry best practices, and seminal works in distributed systems and software architecture. Key references include:
+
+- **Designing Data-Intensive Applications** by Martin Kleppmann [@kleppmann2017designing] - A comprehensive guide to the big ideas behind reliable, scalable, and maintainable systems
+- **System Design Interview** by Alex Xu [@xu2020system; @xu2022system] - Practical insights for system design interviews
+- **Building Microservices** by Sam Newman [@newman2021building] - Essential patterns for microservices architecture
+- **Clean Architecture** by Robert C. Martin [@martin2017clean] - Software design principles and patterns
+- Foundational papers on distributed systems including the CAP theorem [@gilbert2002cap; @brewer2012cap], consistent hashing [@karger1997consistent], and key distributed systems [@decandia2007dynamo; @chang2008bigtable; @lakshman2010cassandra]
+
+Complete references are provided at the end of each chapter and in the bibliography.
 
 ---
 

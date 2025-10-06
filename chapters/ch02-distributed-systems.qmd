@@ -192,3 +192,5 @@ After creating the initial design, optimize for scale:
 ## Summary
 
 Understanding these core principles and following a systematic design process provides a strong foundation for building distributed systems. The following chapters will explore specific components and patterns that implement these principles in practice.
+
+For deeper understanding of distributed systems architecture and implementation patterns, readers are encouraged to consult comprehensive resources such as Kleppmann's *Designing Data-Intensive Applications* [@kleppmann2017designing] and practical guides like the *System Design Interview* series [@xu2020system; @xu2022system].
